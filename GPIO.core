@@ -13,11 +13,12 @@ CAPI=2:
 #-----------------------------------------------------------------------------
 # Revisions  :
 # Date        Version  Author   Description
+# 2022-03-31  1.1.0    mrosiere Update source code
 # 2021-10-26  1.0.0    mrosiere Created
 #-----------------------------------------------------------------------------
 
-name : asylum:component:GPIO:1.0.0
-description : Clock Divider Cell
+name        : asylum:component:GPIO:1.1.0
+description : GPIO Module
 
 filesets:
 

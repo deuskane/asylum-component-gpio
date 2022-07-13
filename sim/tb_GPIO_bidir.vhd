@@ -6,7 +6,7 @@
 -- Author     : mrosiere
 -- Company    : 
 -- Created    : 2017-03-25
--- Last update: 2021-08-26
+-- Last update: 2022-07-11
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -15,8 +15,9 @@
 -- Copyright (c) 2016 
 -------------------------------------------------------------------------------
 -- Revisions  :
--- Date        Version  Author  Description
--- 2017-03-25  1.0      mrosiere	Created
+-- Date        Version  Author   Description
+-- 2022-07-11  1.1      mrosiere DATA_OE_<INIT/FORCE> in NB_IO
+-- 2017-03-25  1.0      mrosiere Created
 -------------------------------------------------------------------------------
 
 library std;
@@ -40,8 +41,8 @@ architecture tb of tb_GPIO_bidir is
   constant SIZE_ADDR        : natural:=8;     -- Bus Address Width
   constant SIZE_DATA        : natural:=8;     -- Bus Data    Width
   constant NB_IO            : natural:=8;     -- Number of IO. Must be <= SIZE_DATA
-  constant DATA_OE_INIT     : boolean:=false; -- Direction of the IO after a reset
-  constant DATA_OE_FORCE    : boolean:=false; -- Can change the direction of the IO
+  constant DATA_OE_INIT     : std_logic_vector(NB_IO-1 downto 0):=(others=>'0'); -- Direction of the IO after a reset
+  constant DATA_OE_FORCE    : std_logic_vector(NB_IO-1 downto 0):=(others=>'0'); -- Can change the direction of the IO
   constant IT_ENABLE        : boolean:=false; -- GPIO can generate interruption
 
   -- =====[ Signals ]=============================

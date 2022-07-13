@@ -6,28 +6,28 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2013-12-26
--- Last update: 2018-06-01
+-- Last update: 2022-07-13
 -- Platform   : 
--- Standard   : VHDL'87
+-- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
 -- Description:
 -- It's a GPIO component
 -- Register Map :
 -- [0] Read/Write : data    (with data_oe mask apply)
--- [1] Write      : data oe (if data_oe_force = 0)
+-- [1] Write      : data_oe (if data_oe_force = 0)
 -- [2] Read       : data_in
 -- [3] Read/Write : data_out
-
 -------------------------------------------------------------------------------
 -- Copyright (c) 2013 
 -------------------------------------------------------------------------------
 -- Revisions  :
--- Date        Version  Author  Description
--- 2018-06-01  0.4      rosiere Add to address for a direct access at data_in_r
---                              and data_out_r
--- 2014-06-05  0.3      rosiere Extract bus in another IP
--- 2014-02-07  0.2      rosiere bus_read_data : protection during a reset
--- 2013-12-26  0.1      rosiere	Created
+-- Date        Version  Author   Description
+-- 2022-07-11  0.5      mrosiere DATA_OE_<INIT/FORCE> in NB_IO
+-- 2018-06-01  0.4      mrosiere Add to address for a direct access at data_in_r
+--                               and data_out_r
+-- 2014-06-05  0.3      mrosiere Extract bus in another IP
+-- 2014-02-07  0.2      mrosiere bus_read_data : protection during a reset
+-- 2013-12-26  0.1      mrosiere Created
 -------------------------------------------------------------------------------
 
 library IEEE;
@@ -36,12 +36,12 @@ use IEEE.numeric_std.ALL;
 
 entity GPIO is
   generic(
-    SIZE_ADDR        : natural:=2;     -- Bus Address Width
-    SIZE_DATA        : natural:=8;     -- Bus Data    Width
-    NB_IO            : natural:=8;     -- Number of IO. Must be <= SIZE_DATA
-    DATA_OE_INIT     : boolean:=false; -- Direction of the IO after a reset
-    DATA_OE_FORCE    : boolean:=false; -- Can change the direction of the IO
-    IT_ENABLE        : boolean:=false  -- GPIO can generate interruption
+    SIZE_ADDR        : natural:=2;       -- Bus Address Width
+    SIZE_DATA        : natural:=8;       -- Bus Data    Width
+    NB_IO            : natural:=8;       -- Number of IO. Must be <= SIZE_DATA
+    DATA_OE_INIT     : std_logic_vector; -- Direction of the IO after a reset
+    DATA_OE_FORCE    : std_logic_vector; -- Can change the direction of the IO
+    IT_ENABLE        : boolean:=false    -- GPIO can generate interruption
     );
   port   (
     clk_i            : in    std_logic;
@@ -82,10 +82,10 @@ architecture rtl of GPIO is
   -----------------------------------------------------------------------------
   -- Local parameters
   -----------------------------------------------------------------------------
-  constant IO_OUT_ONLY         : boolean := DATA_OE_FORCE and     DATA_OE_INIT;
-  constant IO_IN_ONLY          : boolean := DATA_OE_FORCE and not DATA_OE_INIT;
-  constant IO_OUT              : boolean := not DATA_OE_FORCE or IO_OUT_ONLY;
-  constant IO_IN               : boolean := not DATA_OE_FORCE or IO_IN_ONLY;
+  constant IO_OUT_ONLY         : std_logic_vector(NB_IO-1 downto 0) :=     DATA_OE_FORCE and     DATA_OE_INIT;
+  constant IO_IN_ONLY          : std_logic_vector(NB_IO-1 downto 0) :=     DATA_OE_FORCE and not DATA_OE_INIT;
+  constant IO_OUT              : std_logic_vector(NB_IO-1 downto 0) := not DATA_OE_FORCE or IO_OUT_ONLY;
+  constant IO_IN               : std_logic_vector(NB_IO-1 downto 0) := not DATA_OE_FORCE or IO_IN_ONLY;
   
   -----------------------------------------------------------------------------
   -- Address
@@ -100,7 +100,7 @@ architecture rtl of GPIO is
   -----------------------------------------------------------------------------
   -- Register
   -----------------------------------------------------------------------------
-  constant data_oe_r_init   : std_logic_vector(NB_IO-1 downto 0) := (others => to_stdulogic(DATA_OE_INIT));
+  constant data_oe_r_init   : std_logic_vector(NB_IO-1 downto 0) := DATA_OE_INIT;
   signal   data_out_r       : std_logic_vector(NB_IO-1 downto 0);
   signal   data_in_r        : std_logic_vector(NB_IO-1 downto 0);
   signal   data_oe_r        : std_logic_vector(NB_IO-1 downto 0);
@@ -124,98 +124,121 @@ begin
   busy_o   <= '0'; -- never busy
 
   rdata_o  <= std_logic_vector(resize(unsigned(rdata), rdata_o'length));
-  
-  gen_rdata_io_out_only: if IO_OUT_ONLY generate
-    rdata <= data_out_r;
-  end generate;
 
-  gen_rdata_io_in_only: if IO_IN_ONLY generate
-    rdata <= data_in_r;
-  end generate;
+  gen_gpio:
+  for it_io in NB_IO-1 downto 0
+  generate
 
-  gen_rdata_force_off: if not DATA_OE_FORCE generate
-    rdata <= data_in_r  when (addr_i = raddr_data_in ) else
-             data_out_r when (addr_i = raddr_data_out) else
-             ((data_out_r and     data_oe_r) or
-              (data_in_r  and not data_oe_r));
-  end generate;
+    gen_rdata_io_out_only: 
+    if IO_OUT_ONLY(it_io)='1'
+    generate
+      rdata(it_io) <= data_out_r(it_io);
+    end generate;
+
+    gen_rdata_io_in_only:
+    if IO_IN_ONLY (it_io)='1'
+    generate
+      rdata(it_io) <= data_in_r(it_io);
+    end generate;
+
+    gen_rdata_force_off:
     
-  -----------------------------------------------------------------------------
-  -- IO Direction
-  -----------------------------------------------------------------------------
-  gen_data_oe_force_on : if     DATA_OE_FORCE generate
-    data_oe <= data_oe_r_init;
-  end generate;
 
-  gen_data_oe_force_off: if not DATA_OE_FORCE generate
-    data_oe <= data_oe_r;
+    if DATA_OE_FORCE(it_io)='0'
+    generate
+    rdata(it_io) <= data_in_r (it_io) when (addr_i = raddr_data_in ) else
+                    data_out_r(it_io) when (addr_i = raddr_data_out) else
+                    ((data_out_r(it_io) and     data_oe_r(it_io)) or
+                     (data_in_r (it_io) and not data_oe_r(it_io)));
+    end generate;
+    
+    -----------------------------------------------------------------------------
+    -- IO Direction
+    -----------------------------------------------------------------------------
+    gen_data_oe_force_on :
+    if DATA_OE_FORCE(it_io) = '1'
+    generate
+      data_oe(it_io) <= data_oe_r_init(it_io);
+    end generate;
 
-    process(clk_i,arstn_i )
-    begin 
-      if (arstn_i='0') -- arstn_i actif bas
-      then
-        data_oe_r <= data_oe_r_init;
-      elsif rising_edge(clk_i)
-      then  -- rising clock edge
-        if cke_i = '1'
+    gen_data_oe_force_off:
+    if DATA_OE_FORCE(it_io) = '0'
+    generate
+      data_oe(it_io) <= data_oe_r(it_io);
+
+      process(clk_i,arstn_i )
+      begin 
+        if (arstn_i='0') -- arstn_i actif bas
         then
-          if (cs_i = '1' and we_i = '1')
+          data_oe_r(it_io) <= data_oe_r_init(it_io);
+        elsif rising_edge(clk_i)
+        then  -- rising clock edge
+          if cke_i = '1'
           then
-            if (addr_i = waddr_data_oe)
+            if (cs_i = '1' and we_i = '1')
             then
-              data_oe_r <= wdata_i(NB_IO-1 downto 0);
+              if (addr_i = waddr_data_oe)
+              then
+                data_oe_r(it_io) <= wdata_i(it_io);
+              end if;
             end if;
           end if;
         end if;
-      end if;
-    end process;
+      end process;
 
-  end generate;
+    end generate;
+
+    -----------------------------------------------------------------------------
+    -- IO Data output
+    -----------------------------------------------------------------------------
+    gen_data_out_r_off:
+    if IO_OUT(it_io) = '0' generate
+      data_out_r(it_io) <= '0';
+    end generate;
+
+    gen_data_out_r_on :
+    if IO_OUT(it_io) = '1' generate
+      process(clk_i,arstn_i )
+      begin 
+        if (arstn_i='0') -- arstn_i actif bas
+        then
+          data_out_r(it_io) <= '0';
+        elsif rising_edge(clk_i)
+        then  -- rising clock edge
+          if cke_i = '1'
+          then
+            if (cs_i = '1' and we_i = '1')
+            then
+              if ((addr_i = waddr_data) or
+                  (addr_i = waddr_data_out))
+              then
+                data_out_r(it_io) <= wdata_i(it_io);
+              end if;
+            end if;
+          end if;
+        end if;
+      end process;
+    end generate;
+
+    -----------------------------------------------------------------------------
+    -- IO Data input
+    -- Sampling input data
+    -- Don't care metastability
+    -----------------------------------------------------------------------------
+    gen_data_in_r_on :
+    if IO_IN(it_io) = '1'
+    generate
+      process(clk_i)
+      begin 
+        if rising_edge(clk_i)
+        then  -- rising clock edge
+          data_in_r(it_io) <= data_i(it_io);
+        end if;
+      end process;
+    end generate;
+
+end generate gen_gpio;
   
-  -----------------------------------------------------------------------------
-  -- IO Data output
-  -----------------------------------------------------------------------------
-  gen_data_out_r_off: if not IO_OUT generate
-    data_out_r <= (others => '0');
-  end generate;
-
-  gen_data_out_r_on : if     IO_OUT     generate
-    process(clk_i,arstn_i )
-    begin 
-      if (arstn_i='0') -- arstn_i actif bas
-      then
-        data_out_r <= (others => '0');
-      elsif rising_edge(clk_i)
-      then  -- rising clock edge
-        if cke_i = '1'
-        then
-          if (cs_i = '1' and we_i = '1')
-          then
-            if ((addr_i = waddr_data) or
-                (addr_i = waddr_data_out))
-            then
-              data_out_r <= wdata_i(NB_IO-1 downto 0);
-            end if;
-          end if;
-        end if;
-      end if;
-    end process;
-  end generate;
-
-  -----------------------------------------------------------------------------
-  -- IO Data input
-  -- Sampling input data
-  -- Don't care metastability
-  -----------------------------------------------------------------------------
-  gen_data_in_r_on : if IO_IN generate
-    process(clk_i)
-    begin 
-      if rising_edge(clk_i)
-      then  -- rising clock edge
-        data_in_r <= data_i;
-      end if;
-    end process;
-  end generate;
 
   -----------------------------------------------------------------------------
   -- Interrupt
