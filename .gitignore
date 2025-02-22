@@ -1,2 +1,4 @@
 build
 build-*
+fusesoc.conf
+src/csr/GPIO_*
