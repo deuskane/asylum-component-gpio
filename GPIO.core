@@ -20,15 +20,24 @@ CAPI=2:
 name        : asylum:component:GPIO:1.1.0
 description : GPIO Module
 
+generate:
+  gen_csr:
+    generator : regtool
+    parameters:
+      file: src/csr/GPIO.hjson
+      name: GPIO
+      copy: True
 filesets:
 
   #---------------------------------------
   # Source Files
   #---------------------------------------
   files_hdl:
-    files:
+    files     :
       - src/GPIO.vhd
     file_type : vhdlSource
+    depend    :
+      - asylum:utils:generators
       
   #---------------------------------------
   # Testbench Files
@@ -57,6 +66,8 @@ targets:
       - files_sim
     toplevel        : tb_GPIO_bidir
     default_tool    : ghdl
+    generate        :
+      - gen_csr
     tools :
       ghdl :
         run_options : ["--vcd=dut.vcd"]
