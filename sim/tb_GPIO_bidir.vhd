@@ -6,7 +6,7 @@
 -- Author     : mrosiere
 -- Company    : 
 -- Created    : 2017-03-25
--- Last update: 2022-07-11
+-- Last update: 2025-02-25
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -29,7 +29,7 @@ use ieee.numeric_std.all;
 --use ieee.numeric_bit.all;
 --use ieee.std_logic_arith.all;
 
-library work;
+library asylum;
 
 entity tb_GPIO_bidir is
 
@@ -96,7 +96,7 @@ begin
   ------------------------------------------------
   -- Instance of DUT
   ------------------------------------------------
-  GPIO : entity work.GPIO(rtl)
+  GPIO : entity asylum.GPIO(rtl)
   generic map(
     SIZE_ADDR        => SIZE_ADDR      ,
     SIZE_DATA        => SIZE_DATA      ,

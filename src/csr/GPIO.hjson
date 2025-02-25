@@ -1,48 +1,67 @@
 {
     name      : "GPIO",
     width     : 8,
+    desc      : "CSR for General Purpose I/O"
     registers : [
         {
-            name       : "reg1",
+            name       : "data",
             address    : "x0",
-            desc       : "Register 1",
+            desc       : "data - with data_oe mask apply",
+            swaccess   : "rw",
             hwaccess   : "rw",
-            swaccess   : "rw1c",
             fields: [
                 {
-                    name: "field1",
-                    bits: "0",
+                    name: "value",
+                    bits: "7:0",
                     init: "d0",
-                    desc: "Field 1"
+                    desc: "Data with data_oe with mask apply"
                 },
-                {
-                    name: "field2",
-                    bits: "2",
-                    init: "b00",
-                    desc: "Field 2"
-#		    enum: [
-#				{ value: "0", name: "txlvl1", desc: "1 character" },
-#                          	{ value: "1", name: "txlvl4", desc: "4 characters" },
-#                          	{ value: "2", name: "txlvl8", desc: "8 characters" },
-#                          	{ value: "3", name: "txlvl16", desc: "16 characters" }
-#                ]
-                }
             ]
         },
         {
-            name       : "reg2",
-            address    : "08",
-            desc       : "Register 2",
-            hwaccess   : "ro",
+            name       : "data_oe",
+            address    : "x1",
+            desc       : "GPIO Direction",
             swaccess   : "rw",
+            hwaccess   : "rw",
             fields: [
                 {
-                    name: "field1",
+                    name: "value",
                     bits: "7:0",
-                    init: "x00",
-                    desc: "Field 1"
+                    init: "d0",
+                    desc: "GPIO Direction : 0 input, 1 output"
                 },
             ]
-        }
+        },
+        {
+            name       : "data_in",
+            address    : "x2",
+            desc       : "GPIO Input",
+            swaccess   : "ro",
+            hwaccess   : "wo",
+            fields: [
+                {
+                    name: "value",
+                    bits: "7:0",
+                    init: "d0",
+                    desc: "Input Data of GPIO"
+                },
+            ]
+        },
+        {
+            name       : "data_out",
+            address    : "x3",
+            desc       : "GPIO Output",
+            swaccess   : "rw",
+            hwaccess   : "ro",
+            fields: [
+                {
+                    name: "value",
+                    bits: "7:0",
+                    init: "d0",
+                    desc: "Output Data of GPIO"
+                },
+            ]
+        },
     ]
 }

@@ -20,54 +20,65 @@ CAPI=2:
 name        : asylum:component:GPIO:1.1.0
 description : GPIO Module
 
+#=========================================
 generate:
-  gen_csr:
-    generator : regtool
-    parameters:
-      file: src/csr/GPIO.hjson
-      name: GPIO
-      copy: True
-filesets:
+#=========================================
 
   #---------------------------------------
-  # Source Files
+  gen_csr:
   #---------------------------------------
-  files_hdl:
-    files     :
+    generator : regtool
+    parameters:
+      file         : src/csr/GPIO.hjson
+      name         : GPIO
+      copy         : src/csr
+      logical_name : asylum
+
+#=========================================
+filesets:
+#=========================================
+
+  #---------------------------------------
+  hdl:
+  #---------------------------------------
+    files        :
       - src/GPIO.vhd
-    file_type : vhdlSource
-    depend    :
+    file_type    : vhdlSource
+    logical_name : asylum
+    depend       :
       - asylum:utils:generators
       
   #---------------------------------------
-  # Testbench Files
+  sim:
   #---------------------------------------
-  files_sim:
     files:
       - sim/tb_GPIO_bidir.vhd
     file_type : vhdlSource
 
+#=========================================
 targets:
+#=========================================
 
-  #---------------------------------------
-  # Default Target
   #---------------------------------------
   default: &default
+  #---------------------------------------
     description     : Default Target
     filesets        :
-      - files_hdl
+      - hdl
     toplevel        : GPIO
-    default_tool    : ghdl
-
-  sim:
-    << : *default
-    description     : Simulation of all cases
-    filesets_append :
-      - files_sim
-    toplevel        : tb_GPIO_bidir
     default_tool    : ghdl
     generate        :
       - gen_csr
+
+  #---------------------------------------
+  sim:
+  #---------------------------------------
+    << : *default
+    description     : Simulation of all cases
+    filesets_append :
+      - sim
+    toplevel        : tb_GPIO_bidir
+    default_tool    : ghdl
     tools :
       ghdl :
         run_options : ["--vcd=dut.vcd"]
