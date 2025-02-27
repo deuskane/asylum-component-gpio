@@ -6,7 +6,7 @@
 -- Author     : mrosiere
 -- Company    : 
 -- Created    : 2017-03-25
--- Last update: 2025-02-25
+-- Last update: 2025-02-27
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -54,13 +54,20 @@ architecture tb of tb_GPIO_bidir is
   signal we_i             : std_logic;
   signal addr_i           : std_logic_vector (SIZE_ADDR-1 downto 0);
   signal wdata_i          : std_logic_vector (SIZE_DATA-1 downto 0);
-  signal rdata_o          : std_logic_vector (SIZE_DATA-1 downto 0);
-  signal busy_o           : std_logic;
   signal data_i           : std_logic_vector (NB_IO-1     downto 0);
-  signal data_o           : std_logic_vector (NB_IO-1     downto 0);
-  signal data_oe_o        : std_logic_vector (NB_IO-1     downto 0);
-  signal interrupt_o      : std_logic;
   signal interrupt_ack_i  : std_logic;
+
+  signal rdata_o1         : std_logic_vector (SIZE_DATA-1 downto 0);
+  signal busy_o1          : std_logic;
+  signal data_o1          : std_logic_vector (NB_IO-1     downto 0);
+  signal data_oe_o1       : std_logic_vector (NB_IO-1     downto 0);
+  signal interrupt_o1     : std_logic;
+
+  signal rdata_o2         : std_logic_vector (SIZE_DATA-1 downto 0);
+  signal busy_o2          : std_logic;
+  signal data_o2          : std_logic_vector (NB_IO-1     downto 0);
+  signal data_oe_o2       : std_logic_vector (NB_IO-1     downto 0);
+  signal interrupt_o2     : std_logic;
 
   -------------------------------------------------------
   -- run
@@ -88,6 +95,7 @@ architecture tb of tb_GPIO_bidir is
   -----------------------------------------------------
   -- Test signals
   -----------------------------------------------------
+  signal test_en   : boolean   := false;
   signal test_done : std_logic := '0';
   signal test_ok   : std_logic := '0';
 
@@ -114,14 +122,43 @@ begin
     we_i             => we_i           ,
     addr_i           => addr_i         ,
     wdata_i          => wdata_i        ,
-    rdata_o          => rdata_o        ,
-    busy_o           => busy_o         ,
+    rdata_o          => rdata_o1       ,
+    busy_o           => busy_o1        ,
 
     data_i           => data_i         ,
-    data_o           => data_o         ,
-    data_oe_o        => data_oe_o      ,
+    data_o           => data_o1        ,
+    data_oe_o        => data_oe_o1     ,
     
-    interrupt_o      => interrupt_o    ,
+    interrupt_o      => interrupt_o1   ,
+    interrupt_ack_i  => interrupt_ack_i
+    );
+
+  GPIO_old : entity asylum.GPIO(rtl_without_csr)
+  generic map(
+    SIZE_ADDR        => SIZE_ADDR      ,
+    SIZE_DATA        => SIZE_DATA      ,
+    NB_IO            => NB_IO          ,
+    DATA_OE_INIT     => DATA_OE_INIT   ,
+    DATA_OE_FORCE    => DATA_OE_FORCE  ,
+    IT_ENABLE        => IT_ENABLE    
+    )
+  port map(
+    clk_i            => clk_i          ,
+    cke_i            => cke_i          ,
+    arstn_i          => arstn_i        ,
+    cs_i             => cs_i           ,
+    re_i             => re_i           ,
+    we_i             => we_i           ,
+    addr_i           => addr_i         ,
+    wdata_i          => wdata_i        ,
+    rdata_o          => rdata_o2       ,
+    busy_o           => busy_o2        ,
+
+    data_i           => data_i         ,
+    data_o           => data_o2        ,
+    data_oe_o        => data_oe_o2     ,
+    
+    interrupt_o      => interrupt_o2   ,
     interrupt_ack_i  => interrupt_ack_i
     );
 
@@ -157,6 +194,7 @@ begin
     data_i          <= (others => 'L');
     
     run(1);
+
     arstn_i         <= '1';
     run(1);
 
@@ -170,6 +208,10 @@ begin
     run(1);
     cs_i            <= '0';
     we_i            <= '0';
+
+    test_en         <= true;
+
+
     
     for i in 0 to SIZE_DATA-1 loop
     report "[TESTBENCH] Write data";
@@ -230,5 +272,10 @@ begin
     end if;
   end process gen_test_done;
 
+  -- assert (rdata_o1     = rdata_o2    ) report "Diff rdata_o    " severity failure;
+  -- assert (busy_o1      = busy_o2     ) report "Diff busy_o     " severity failure;
+  -- assert (data_o1      = data_o2     ) report "Diff data_o     " severity failure;
+  -- assert (data_oe_o1   = data_oe_o2  ) report "Diff data_oe_o  " severity failure;
+  -- assert (interrupt_o1 = interrupt_o2) report "Diff interrupt_o" severity failure;
   
 end tb;

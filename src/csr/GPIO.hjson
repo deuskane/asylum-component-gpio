@@ -4,11 +4,13 @@
     desc      : "CSR for General Purpose I/O"
     registers : [
         {
-            name       : "data",
-            address    : "x0",
-            desc       : "data - with data_oe mask apply",
-            swaccess   : "rw",
-            hwaccess   : "rw",
+            name         : "data",
+            address      : "x0",
+	    alias_write  : "data_out",
+            desc         : "data - with data_oe mask apply",
+            swaccess     : "rw",
+            hwaccess     : "rw",
+	    hwext        : True
             fields: [
                 {
                     name: "value",
@@ -51,7 +53,7 @@
         {
             name       : "data_out",
             address    : "x3",
-            desc       : "GPIO Output",
+	    desc       : "GPIO Output",
             swaccess   : "rw",
             hwaccess   : "ro",
             fields: [

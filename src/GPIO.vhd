@@ -6,7 +6,7 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2013-12-26
--- Last update: 2025-02-25
+-- Last update: 2025-02-27
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -107,17 +107,23 @@ begin
     wdata_i   => wdata_i ,
     rdata_o   => rdata_o ,
     busy_o    => busy_o  ,
-    sw2hw     => sw2hw   ,
-    hw2sw     => hw2sw   
+    sw2hw_o   => sw2hw   ,
+    hw2sw_i   => hw2sw   
   );
 
-  
   -----------------------------------------------------------------------------
   -- Data I/O
   -----------------------------------------------------------------------------
-  -- data_o     <= data_out_r;
-  -- data_oe_o  <= data_oe;
-  
+  data_o              <= sw2hw.data_out.value;
+  data_oe_o           <= sw2hw.data_oe .value;
+
+  hw2sw.data.value    <= ((sw2hw.data_out.value and     sw2hw.data_oe .value) or
+                          (sw2hw.data_in .value and not sw2hw.data_oe .value));
+  hw2sw.data.we       <= '1';
+
+  hw2sw.data_in.value <= data_i;
+  hw2sw.data_in.we    <= '1';
+
   -----------------------------------------------------------------------------
   -- IP Output
   -----------------------------------------------------------------------------
@@ -129,7 +135,7 @@ begin
 end rtl;
 
 
-architecture rtl_old of GPIO is
+architecture rtl_without_csr of GPIO is
   function to_stdulogic( V: Boolean ) return std_ulogic is 
   begin 
     if V
@@ -305,4 +311,4 @@ end generate gen_gpio;
   -- Interrupt
   -----------------------------------------------------------------------------
   interrupt_o <= '0';
-end rtl_old;
+end rtl_without_csr;
