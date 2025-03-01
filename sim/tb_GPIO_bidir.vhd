@@ -6,7 +6,7 @@
 -- Author     : mrosiere
 -- Company    : 
 -- Created    : 2017-03-25
--- Last update: 2025-02-27
+-- Last update: 2025-03-01
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -73,24 +73,48 @@ architecture tb of tb_GPIO_bidir is
   -- run
   -------------------------------------------------------
   procedure xrun
-    (constant n     : in positive;           -- nb cycle
-     signal   clk_i : in std_logic
+    (constant n      : in positive;           -- nb cycle
+     signal   clk_i  : in std_logic;
+     constant posedge: in boolean
      ) is
     
   begin
     for i in 0 to n-1
     loop
-      wait until rising_edge(clk_i);        
+      if posedge
+      then
+        wait until rising_edge(clk_i);          
+      else
+        wait until falling_edge(clk_i);          
+      end if;
+      
     end loop;  -- i
   end xrun;
 
   procedure run
-    (constant n     : in positive           -- nb cycle
+    (constant n      : in positive;           -- nb cycle
+     constant posedge: in boolean := true     -- nb cycle
      ) is
     
   begin
-    xrun(n,clk_i);
+    xrun(n,clk_i,posedge);
   end run;
+
+  function to_string ( a: std_logic_vector) return string is
+    variable b : string (1 to a'length) := (others => NUL);
+    variable stri : integer := 1; 
+  begin
+    for i in a'range loop
+      b(stri) := std_logic'image(a((i)))(2);
+      stri := stri+1;
+    end loop;
+    return b;
+  end function;
+
+  function to_string ( a: std_logic) return string is
+  begin
+    return std_logic'image(a);
+  end function;
 
   -----------------------------------------------------
   -- Test signals
@@ -196,6 +220,9 @@ begin
     run(1);
 
     arstn_i         <= '1';
+
+    test_en         <= true;
+
     run(1);
 
     report "[TESTBENCH] Goto OUT mode";
@@ -208,10 +235,6 @@ begin
     run(1);
     cs_i            <= '0';
     we_i            <= '0';
-
-    test_en         <= true;
-
-
     
     for i in 0 to SIZE_DATA-1 loop
     report "[TESTBENCH] Write data";
@@ -272,10 +295,19 @@ begin
     end if;
   end process gen_test_done;
 
-  -- assert (rdata_o1     = rdata_o2    ) report "Diff rdata_o    " severity failure;
-  -- assert (busy_o1      = busy_o2     ) report "Diff busy_o     " severity failure;
-  -- assert (data_o1      = data_o2     ) report "Diff data_o     " severity failure;
-  -- assert (data_oe_o1   = data_oe_o2  ) report "Diff data_oe_o  " severity failure;
-  -- assert (interrupt_o1 = interrupt_o2) report "Diff interrupt_o" severity failure;
+  process
+  begin
+    run(1,false);
+
+    if (test_en)
+    then
+      assert (rdata_o1     = rdata_o2    ) report "Diff rdata_o    "&to_string(rdata_o1    )&" - "&to_string(rdata_o2    ) severity failure;
+      assert (busy_o1      = busy_o2     ) report "Diff busy_o     "&to_string(busy_o1     )&" - "&to_string(busy_o2     ) severity failure;
+      assert (data_o1      = data_o2     ) report "Diff data_o     "&to_string(data_o1     )&" - "&to_string(data_o2     ) severity failure;
+      assert (data_oe_o1   = data_oe_o2  ) report "Diff data_oe_o  "&to_string(data_oe_o1  )&" - "&to_string(data_oe_o2  ) severity failure;
+      assert (interrupt_o1 = interrupt_o2) report "Diff interrupt_o"&to_string(interrupt_o1)&" - "&to_string(interrupt_o2) severity failure;
+    end if;
+  end process;
+  
   
 end tb;
