@@ -6,7 +6,7 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2013-12-26
--- Last update: 2025-02-27
+-- Last update: 2025-03-01
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -14,7 +14,7 @@
 -- It's a GPIO component
 -- Register Map :
 -- [0] Read/Write : data    (with data_oe mask apply)
--- [1] Write      : data_oe (if data_oe_force = 0)
+-- [1] Read/Write : data_oe (if data_oe_force = 0)
 -- [2] Read       : data_in
 -- [3] Read/Write : data_out
 -------------------------------------------------------------------------------
@@ -158,6 +158,7 @@ architecture rtl_without_csr of GPIO is
   -- Address
   -----------------------------------------------------------------------------
   constant raddr_data       : std_logic_vector(SIZE_ADDR-1 downto 0) := std_logic_vector(to_unsigned(0, SIZE_ADDR));
+  constant raddr_data_oe    : std_logic_vector(SIZE_ADDR-1 downto 0) := std_logic_vector(to_unsigned(1, SIZE_ADDR));
   constant raddr_data_in    : std_logic_vector(SIZE_ADDR-1 downto 0) := std_logic_vector(to_unsigned(2, SIZE_ADDR));
   constant raddr_data_out   : std_logic_vector(SIZE_ADDR-1 downto 0) := std_logic_vector(to_unsigned(3, SIZE_ADDR));
   constant waddr_data       : std_logic_vector(SIZE_ADDR-1 downto 0) := std_logic_vector(to_unsigned(0, SIZE_ADDR));
@@ -214,6 +215,7 @@ begin
     if DATA_OE_FORCE(it_io)='0'
     generate
     rdata(it_io) <= data_in_r (it_io) when (addr_i = raddr_data_in ) else
+                    data_oe_r (it_io) when (addr_i = raddr_data_oe ) else
                     data_out_r(it_io) when (addr_i = raddr_data_out) else
                     ((data_out_r(it_io) and     data_oe_r(it_io)) or
                      (data_in_r (it_io) and not data_oe_r(it_io)));
