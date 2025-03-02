@@ -6,7 +6,7 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2013-12-26
--- Last update: 2025-03-01
+-- Last update: 2025-03-02
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -114,14 +114,14 @@ begin
   -----------------------------------------------------------------------------
   -- Data I/O
   -----------------------------------------------------------------------------
-  data_o              <= sw2hw.data_out.value;
-  data_oe_o           <= sw2hw.data_oe .value;
+  data_o              <= sw2hw.data_out.value(data_o   'range);
+  data_oe_o           <= sw2hw.data_oe .value(data_oe_o'range);
 
   hw2sw.data.value    <= ((sw2hw.data_out.value and     sw2hw.data_oe .value) or
                           (sw2hw.data_in .value and not sw2hw.data_oe .value));
   hw2sw.data.we       <= '1';
 
-  hw2sw.data_in.value <= data_i;
+  hw2sw.data_in.value <= std_logic_vector(resize(unsigned(data_i), hw2sw.data_in.value'length));
   hw2sw.data_in.we    <= '1';
 
   -----------------------------------------------------------------------------
