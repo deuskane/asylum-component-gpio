@@ -87,8 +87,8 @@ architecture rtl of GPIO is
   -----------------------------------------------------------------------------
   -- Signal
   -----------------------------------------------------------------------------
-  signal sw2hw : GPIO_t;
-  signal hw2sw : GPIO_t;
+  signal sw2hw : GPIO_sw2hw_t;
+  signal hw2sw : GPIO_hw2sw_t;
   
 begin
 

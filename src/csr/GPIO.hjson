@@ -25,7 +25,7 @@
             address    : "x1",
             desc       : "GPIO Direction",
             swaccess   : "rw",
-            hwaccess   : "rw",
+            hwaccess   : "ro",
             fields: [
                 {
                     name: "value",
@@ -40,7 +40,7 @@
             address    : "x2",
             desc       : "GPIO Input",
             swaccess   : "ro",
-            hwaccess   : "wo",
+            hwaccess   : "rw",
             fields: [
                 {
                     name: "value",
