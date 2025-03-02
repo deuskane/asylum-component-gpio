@@ -72,7 +72,7 @@ targets:
       - gen_csr
 
   #---------------------------------------
-  sim:
+  sim_testcase:
   #---------------------------------------
     << : *default
     description     : Simulation of all cases
