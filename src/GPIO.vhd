@@ -6,7 +6,7 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2013-12-26
--- Last update: 2022-07-13
+-- Last update: 2025-03-02
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -14,7 +14,7 @@
 -- It's a GPIO component
 -- Register Map :
 -- [0] Read/Write : data    (with data_oe mask apply)
--- [1] Write      : data_oe (if data_oe_force = 0)
+-- [1] Read/Write : data_oe (if data_oe_force = 0)
 -- [2] Read       : data_in
 -- [3] Read/Write : data_out
 -------------------------------------------------------------------------------
@@ -31,8 +31,10 @@
 -------------------------------------------------------------------------------
 
 library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.numeric_std.ALL;
+use     IEEE.STD_LOGIC_1164.ALL;
+use     IEEE.numeric_std.ALL;
+library asylum;
+use     asylum.GPIO_csr_pkg.ALL;
 
 entity GPIO is
   generic(
@@ -69,6 +71,71 @@ entity GPIO is
 end GPIO;
 
 architecture rtl of GPIO is
+
+  -----------------------------------------------------------------------------
+  -- Local parameters
+  -----------------------------------------------------------------------------
+  
+  -----------------------------------------------------------------------------
+  -- Address
+  -----------------------------------------------------------------------------
+
+  -----------------------------------------------------------------------------
+  -- Register
+  -----------------------------------------------------------------------------
+
+  -----------------------------------------------------------------------------
+  -- Signal
+  -----------------------------------------------------------------------------
+  signal sw2hw : GPIO_sw2hw_t;
+  signal hw2sw : GPIO_hw2sw_t;
+  
+begin
+
+  -----------------------------------------------------------------------------
+  -- CSR
+  -----------------------------------------------------------------------------
+
+  ins_csr : entity asylum.GPIO_registers(rtl)
+  port map(
+    clk_i     => clk_i   ,
+    arst_b_i  => arstn_i ,
+    cs_i      => cs_i    ,
+    re_i      => re_i    ,
+    we_i      => we_i    ,
+    addr_i    => addr_i(1 downto 0)  ,
+    wdata_i   => wdata_i ,
+    rdata_o   => rdata_o ,
+    busy_o    => busy_o  ,
+    sw2hw_o   => sw2hw   ,
+    hw2sw_i   => hw2sw   
+  );
+
+  -----------------------------------------------------------------------------
+  -- Data I/O
+  -----------------------------------------------------------------------------
+  data_o              <= sw2hw.data_out.value(data_o   'range);
+  data_oe_o           <= sw2hw.data_oe .value(data_oe_o'range);
+
+  hw2sw.data.value    <= ((sw2hw.data_out.value and     sw2hw.data_oe .value) or
+                          (sw2hw.data_in .value and not sw2hw.data_oe .value));
+  hw2sw.data.we       <= '1';
+
+  hw2sw.data_in.value <= std_logic_vector(resize(unsigned(data_i), hw2sw.data_in.value'length));
+  hw2sw.data_in.we    <= '1';
+
+  -----------------------------------------------------------------------------
+  -- IP Output
+  -----------------------------------------------------------------------------
+
+  -----------------------------------------------------------------------------
+  -- Interrupt
+  -----------------------------------------------------------------------------
+  interrupt_o <= '0';
+end rtl;
+
+
+architecture rtl_without_csr of GPIO is
   function to_stdulogic( V: Boolean ) return std_ulogic is 
   begin 
     if V
@@ -91,6 +158,7 @@ architecture rtl of GPIO is
   -- Address
   -----------------------------------------------------------------------------
   constant raddr_data       : std_logic_vector(SIZE_ADDR-1 downto 0) := std_logic_vector(to_unsigned(0, SIZE_ADDR));
+  constant raddr_data_oe    : std_logic_vector(SIZE_ADDR-1 downto 0) := std_logic_vector(to_unsigned(1, SIZE_ADDR));
   constant raddr_data_in    : std_logic_vector(SIZE_ADDR-1 downto 0) := std_logic_vector(to_unsigned(2, SIZE_ADDR));
   constant raddr_data_out   : std_logic_vector(SIZE_ADDR-1 downto 0) := std_logic_vector(to_unsigned(3, SIZE_ADDR));
   constant waddr_data       : std_logic_vector(SIZE_ADDR-1 downto 0) := std_logic_vector(to_unsigned(0, SIZE_ADDR));
@@ -147,6 +215,7 @@ begin
     if DATA_OE_FORCE(it_io)='0'
     generate
     rdata(it_io) <= data_in_r (it_io) when (addr_i = raddr_data_in ) else
+                    data_oe_r (it_io) when (addr_i = raddr_data_oe ) else
                     data_out_r(it_io) when (addr_i = raddr_data_out) else
                     ((data_out_r(it_io) and     data_oe_r(it_io)) or
                      (data_in_r (it_io) and not data_oe_r(it_io)));
@@ -244,4 +313,4 @@ end generate gen_gpio;
   -- Interrupt
   -----------------------------------------------------------------------------
   interrupt_o <= '0';
-end rtl;
+end rtl_without_csr;

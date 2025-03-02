@@ -13,48 +13,71 @@ CAPI=2:
 #-----------------------------------------------------------------------------
 # Revisions  :
 # Date        Version  Author   Description
-# 2022-03-31  1.1.0    mrosiere Update source code
 # 2021-10-26  1.0.0    mrosiere Created
+# 2022-03-31  1.1.0    mrosiere Update source code
+# 2025-03-01  1.2.0    mrosiere Add CSR
 #-----------------------------------------------------------------------------
 
-name        : asylum:component:GPIO:1.1.0
+name        : asylum:component:GPIO:1.2.0
 description : GPIO Module
 
-filesets:
+#=========================================
+generate:
+#=========================================
 
   #---------------------------------------
-  # Source Files
+  gen_csr:
   #---------------------------------------
-  files_hdl:
-    files:
+    generator : regtool
+    parameters:
+      file         : src/csr/GPIO.hjson
+      name         : GPIO
+      copy         : src/csr
+      logical_name : asylum
+
+#=========================================
+filesets:
+#=========================================
+
+  #---------------------------------------
+  hdl:
+  #---------------------------------------
+    files        :
       - src/GPIO.vhd
-    file_type : vhdlSource
+    file_type    : vhdlSource
+    logical_name : asylum
+    depend       :
+      - asylum:utils:generators
       
   #---------------------------------------
-  # Testbench Files
+  sim:
   #---------------------------------------
-  files_sim:
     files:
       - sim/tb_GPIO_bidir.vhd
-    file_type : vhdlSource
+    file_type : vhdlSource-2008
 
+#=========================================
 targets:
+#=========================================
 
-  #---------------------------------------
-  # Default Target
   #---------------------------------------
   default: &default
+  #---------------------------------------
     description     : Default Target
     filesets        :
-      - files_hdl
+      - hdl
     toplevel        : GPIO
     default_tool    : ghdl
+    generate        :
+      - gen_csr
 
-  sim:
+  #---------------------------------------
+  sim_testcase:
+  #---------------------------------------
     << : *default
     description     : Simulation of all cases
     filesets_append :
-      - files_sim
+      - sim
     toplevel        : tb_GPIO_bidir
     default_tool    : ghdl
     tools :
