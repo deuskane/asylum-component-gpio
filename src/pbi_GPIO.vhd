@@ -6,7 +6,7 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2017-03-30
--- Last update: 2025-03-08
+-- Last update: 2025-03-09
 -- Platform   : 
 -- Standard   : VHDL'87
 -------------------------------------------------------------------------------
@@ -64,7 +64,7 @@ architecture rtl of pbi_GPIO is
   
 begin  -- architecture rtl
 
-  ins_pbi_wrapper_target : entity work.pbi_wrapper_target_v2(rtl)
+  ins_pbi_wrapper_target : entity work.pbi_wrapper_target(rtl)
   generic map(
     SIZE_DATA      => PBI_DATA_WIDTH ,
     SIZE_ADDR_IP   => GPIO_ADDR_WIDTH,
