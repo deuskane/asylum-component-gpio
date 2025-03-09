@@ -24,7 +24,7 @@ FILE_CORE	?= GPIO.core
 TARGET          ?= sim_testcase
 TOOL		?= ghdl
 
-CORE_NAME       := $(shell grep name $(FILE_CORE) | head -n1 | tr -d ' ')
+CORE_NAME       := $(shell grep ^name $(FILE_CORE) | head -n1 | tr -d ' ')
 
 IP_VENDOR	 = $(shell echo $(CORE_NAME) | cut -d':' -f2)
 IP_LIBRARY 	 = $(shell echo $(CORE_NAME) | cut -d':' -f3)
