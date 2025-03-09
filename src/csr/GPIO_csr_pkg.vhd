@@ -88,4 +88,8 @@ package GPIO_csr_pkg is
     data : GPIO_data_hw2sw_t;
     data_in : GPIO_data_in_hw2sw_t;
   end record GPIO_hw2sw_t;
+
+  constant GPIO_ADDR_WIDTH : natural := 2;
+  constant GPIO_DATA_WIDTH : natural := 8;
+
 end package GPIO_csr_pkg;

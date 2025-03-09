@@ -16,9 +16,10 @@ CAPI=2:
 # 2021-10-26  1.0.0    mrosiere Created
 # 2022-03-31  1.1.0    mrosiere Update source code
 # 2025-03-01  1.2.0    mrosiere Add CSR
+# 2025-03-08  1.3.0    mrosiere Use unconstraint pbi
 #-----------------------------------------------------------------------------
 
-name        : asylum:component:GPIO:1.2.0
+name        : asylum:component:GPIO:1.3.0
 description : GPIO Module
 
 #=========================================
@@ -33,7 +34,7 @@ generate:
       file         : src/csr/GPIO.hjson
       name         : GPIO
       copy         : src/csr
-      logical_name : asylum
+      #logical_name : asylum
 
 #=========================================
 filesets:
@@ -44,15 +45,18 @@ filesets:
   #---------------------------------------
     files        :
       - src/GPIO.vhd
+      - src/pbi_GPIO.vhd
     file_type    : vhdlSource
-    logical_name : asylum
+    #logical_name : asylum
     depend       :
       - asylum:utils:generators
-      
+      - asylum:component:pbi_wrapper_target
+      - asylum:package:pbi_pkg      
   #---------------------------------------
   sim:
   #---------------------------------------
     files:
+      - src/GPIO_v1.vhd
       - sim/tb_GPIO_bidir.vhd
     file_type : vhdlSource-2008
 

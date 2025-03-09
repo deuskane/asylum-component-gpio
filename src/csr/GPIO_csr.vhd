@@ -5,8 +5,8 @@ library IEEE;
 use     IEEE.STD_LOGIC_1164.ALL;
 use     IEEE.NUMERIC_STD.ALL;
 
-library asylum;
-use     asylum.GPIO_csr_pkg.ALL;
+library work;
+use     work.GPIO_csr_pkg.ALL;
 
 entity GPIO_registers is
   port (

@@ -6,7 +6,7 @@
 -- Author     : mrosiere
 -- Company    : 
 -- Created    : 2017-03-25
--- Last update: 2025-03-01
+-- Last update: 2025-03-09
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -29,7 +29,8 @@ use ieee.numeric_std.all;
 --use ieee.numeric_bit.all;
 --use ieee.std_logic_arith.all;
 
-library asylum;
+library work;
+use     work.pbi_pkg.all;
 
 entity tb_GPIO_bidir is
 
@@ -38,7 +39,7 @@ end tb_GPIO_bidir;
 architecture tb of tb_GPIO_bidir is
 
   -- =====[ Constants ]===========================
-  constant SIZE_ADDR        : natural:=8;     -- Bus Address Width
+  constant SIZE_ADDR        : natural:=2;     -- Bus Address Width
   constant SIZE_DATA        : natural:=8;     -- Bus Data    Width
   constant NB_IO            : natural:=8;     -- Number of IO. Must be <= SIZE_DATA
   constant DATA_OE_INIT     : std_logic_vector(NB_IO-1 downto 0):=(others=>'0'); -- Direction of the IO after a reset
@@ -69,6 +70,11 @@ architecture tb of tb_GPIO_bidir is
   signal data_oe_o2       : std_logic_vector (NB_IO-1     downto 0);
   signal interrupt_o2     : std_logic;
 
+  signal pbi_ini_i        : pbi_ini_t(addr (SIZE_ADDR-1 downto 0),
+                                      wdata(SIZE_DATA-1 downto 0));          
+  signal pbi_tgt_o1       : pbi_tgt_t(rdata(SIZE_DATA-1 downto 0));          
+  signal pbi_tgt_o2       : pbi_tgt_t(rdata(SIZE_DATA-1 downto 0));          
+  
   -------------------------------------------------------
   -- run
   -------------------------------------------------------
@@ -128,10 +134,18 @@ begin
   ------------------------------------------------
   -- Instance of DUT
   ------------------------------------------------
-  GPIO : entity asylum.GPIO(rtl)
+  pbi_ini_i.cs    <= cs_i   ;
+  pbi_ini_i.we    <= we_i   ;
+  pbi_ini_i.re    <= re_i   ;
+  pbi_ini_i.addr  <= addr_i ;
+  pbi_ini_i.wdata <= wdata_i;
+
+  rdata_o1        <= pbi_tgt_o1.rdata;
+  busy_o1         <= pbi_tgt_o1.busy ;
+
+
+  GPIO : entity work.GPIO(rtl)
   generic map(
-    SIZE_ADDR        => SIZE_ADDR      ,
-    SIZE_DATA        => SIZE_DATA      ,
     NB_IO            => NB_IO          ,
     DATA_OE_INIT     => DATA_OE_INIT   ,
     DATA_OE_FORCE    => DATA_OE_FORCE  ,
@@ -141,14 +155,9 @@ begin
     clk_i            => clk_i          ,
     cke_i            => cke_i          ,
     arstn_i          => arstn_i        ,
-    cs_i             => cs_i           ,
-    re_i             => re_i           ,
-    we_i             => we_i           ,
-    addr_i           => addr_i         ,
-    wdata_i          => wdata_i        ,
-    rdata_o          => rdata_o1       ,
-    busy_o           => busy_o1        ,
-
+    pbi_ini_i        => pbi_ini_i      , 
+    pbi_tgt_o        => pbi_tgt_o1     ,
+   
     data_i           => data_i         ,
     data_o           => data_o1        ,
     data_oe_o        => data_oe_o1     ,
@@ -157,7 +166,7 @@ begin
     interrupt_ack_i  => interrupt_ack_i
     );
 
-  GPIO_old : entity asylum.GPIO(rtl_without_csr)
+  GPIO_v1 : entity work.GPIO_v1(rtl)
   generic map(
     SIZE_ADDR        => SIZE_ADDR      ,
     SIZE_DATA        => SIZE_DATA      ,
@@ -212,7 +221,7 @@ begin
     cs_i            <= '0';
     re_i            <= '0';
     we_i            <= '0';
-    addr_i          <= X"00";
+    addr_i          <=  "00";
     wdata_i         <= X"00";
     interrupt_ack_i <= '0';
     data_i          <= (others => 'L');
@@ -227,7 +236,7 @@ begin
 
     report "[TESTBENCH] Goto OUT mode";
     cs_i            <= '1';
-    addr_i          <= X"01";
+    addr_i          <=  "01";
     wdata_i         <= X"FF";
     run(1);
     we_i            <= '1';
@@ -239,7 +248,7 @@ begin
     for i in 0 to SIZE_DATA-1 loop
     report "[TESTBENCH] Write data";
     cs_i            <= '1';
-    addr_i          <= X"00";
+    addr_i          <=  "00";
     wdata_i         <= X"00";
     wdata_i(i)      <= '1';
     run(1);
@@ -252,7 +261,7 @@ begin
 
     report "[TESTBENCH] Goto IN mode";
     cs_i            <= '1';
-    addr_i          <= X"01";
+    addr_i          <=  "01";
     wdata_i         <= X"00";
     run(1);
     we_i            <= '1';
@@ -264,7 +273,7 @@ begin
     for i in 0 to SIZE_DATA-1 loop
     report "[TESTBENCH] Write data";
     cs_i            <= '1';
-    addr_i          <= X"00";
+    addr_i          <=  "00";
     data_i          <= (others => 'L');
     data_i(i)       <= 'H';
     run(1);
