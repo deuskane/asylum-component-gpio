@@ -10,7 +10,7 @@
             desc         : "data - with data_oe mask apply",
             swaccess     : "rw",
             hwaccess     : "rw",
-	    hwext        : True
+	    hwtype       : "ext"
             fields: [
                 {
                     name: "value",
