@@ -6,7 +6,7 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2013-12-26
--- Last update: 2025-03-03
+-- Last update: 2025-03-19
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -73,15 +73,6 @@ entity GPIO_v1 is
 end GPIO_v1;
 
 architecture rtl of GPIO_v1 is
-  function to_stdulogic( V: Boolean ) return std_ulogic is 
-  begin 
-    if V
-    then 
-      return '1'; 
-    else 
-      return '0';
-    end if;     
-  end to_stdulogic;
 
   -----------------------------------------------------------------------------
   -- Local parameters
