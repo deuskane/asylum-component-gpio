@@ -6,7 +6,7 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2013-12-26
--- Last update: 2025-03-09
+-- Last update: 2025-03-22
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -96,14 +96,9 @@ begin
   port map(
     clk_i     => clk_i   ,
     arst_b_i  => arstn_i ,
-    cs_i      => pbi_ini_i.cs      ,
-    re_i      => pbi_ini_i.re      ,
-    we_i      => pbi_ini_i.we      ,
-    addr_i    => pbi_ini_i.addr    ,
-    wdata_i   => pbi_ini_i.wdata   ,
-    rdata_o   => pbi_tgt_o.rdata   ,
-    busy_o    => pbi_tgt_o.busy    ,
-    sw2hw_o   => sw2hw   ,
+    pbi_ini_i => pbi_ini_i,
+    pbi_tgt_o => pbi_tgt_o,
+    sw2hw_o   => sw2hw    ,
     hw2sw_i   => hw2sw   
   );
 

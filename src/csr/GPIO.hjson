@@ -2,6 +2,8 @@
     name      : "GPIO",
     width     : 8,
     desc      : "CSR for General Purpose I/O"
+    interface : "pbi"
+    
     registers : [
         {
             name         : "data",
