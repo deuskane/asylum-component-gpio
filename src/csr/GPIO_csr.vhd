@@ -31,6 +31,17 @@ end entity GPIO_registers;
 
 architecture rtl of GPIO_registers is
 
+  signal   sig_wcs   : std_logic;
+  signal   sig_we    : std_logic;
+  signal   sig_waddr : std_logic_vector(pbi_ini_i.addr'length-1 downto 0);
+  signal   sig_wdata : std_logic_vector(pbi_ini_i.wdata'length-1 downto 0);
+
+  signal   sig_rcs   : std_logic;
+  signal   sig_re    : std_logic;
+  signal   sig_raddr : std_logic_vector(pbi_ini_i.addr'length-1 downto 0);
+  signal   sig_rdata : std_logic_vector(pbi_tgt_o.rdata'length-1 downto 0);
+  signal   sig_rbusy : std_logic;
+
   signal   data_wcs   : std_logic;
   signal   data_rcs   : std_logic;
   signal   data_we    : std_logic;
@@ -69,6 +80,18 @@ architecture rtl of GPIO_registers is
 
 begin  -- architecture rtl
 
+  -- Interface 
+  sig_wcs   <= pbi_ini_i.cs;
+  sig_we    <= pbi_ini_i.we;
+  sig_waddr <= pbi_ini_i.addr;
+  sig_wdata <= pbi_ini_i.wdata;
+
+  sig_rcs   <= pbi_ini_i.cs;
+  sig_re    <= pbi_ini_i.re;
+  sig_raddr <= pbi_ini_i.addr;
+  pbi_tgt_o.rdata <= sig_rdata;
+  pbi_tgt_o.busy <= sig_rbusy;
+
   --==================================
   -- Register    : data
   -- Description : data - with data_oe mask apply
@@ -85,8 +108,8 @@ begin  -- architecture rtl
   --==================================
 
 
-  data_rcs     <= '1' when     (pbi_ini_i.addr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(0,GPIO_ADDR_WIDTH))) else '0';
-  data_re      <= pbi_ini_i.cs and data_rcs and pbi_ini_i.re;
+  data_rcs     <= '1' when     (sig_raddr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(0,GPIO_ADDR_WIDTH))) else '0';
+  data_re      <= sig_rcs and data_rcs and sig_re;
   data_rdata   <= (
     7 => data_value_rdata(7),
     6 => data_value_rdata(6),
@@ -137,8 +160,8 @@ begin  -- architecture rtl
   --==================================
 
 
-  data_oe_rcs     <= '1' when     (pbi_ini_i.addr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(1,GPIO_ADDR_WIDTH))) else '0';
-  data_oe_re      <= pbi_ini_i.cs and data_oe_rcs and pbi_ini_i.re;
+  data_oe_rcs     <= '1' when     (sig_raddr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(1,GPIO_ADDR_WIDTH))) else '0';
+  data_oe_re      <= sig_rcs and data_oe_rcs and sig_re;
   data_oe_rdata   <= (
     7 => data_oe_value_rdata(7),
     6 => data_oe_value_rdata(6),
@@ -150,9 +173,9 @@ begin  -- architecture rtl
     0 => data_oe_value_rdata(0),
     others => '0') when data_oe_rcs = '1' else (others => '0');
 
-  data_oe_wcs     <= '1' when     (pbi_ini_i.addr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(1,GPIO_ADDR_WIDTH))) else '0';
-  data_oe_we      <= pbi_ini_i.cs and data_oe_wcs and pbi_ini_i.we;
-  data_oe_wdata   <= pbi_ini_i.wdata;
+  data_oe_wcs     <= '1' when     (sig_waddr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(1,GPIO_ADDR_WIDTH))) else '0';
+  data_oe_we      <= sig_wcs and data_oe_wcs and sig_we;
+  data_oe_wdata   <= sig_wdata;
 
   ins_data_oe : entity work.csr_reg(rtl)
     generic map
@@ -191,8 +214,8 @@ begin  -- architecture rtl
   --==================================
 
 
-  data_in_rcs     <= '1' when     (pbi_ini_i.addr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(2,GPIO_ADDR_WIDTH))) else '0';
-  data_in_re      <= pbi_ini_i.cs and data_in_rcs and pbi_ini_i.re;
+  data_in_rcs     <= '1' when     (sig_raddr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(2,GPIO_ADDR_WIDTH))) else '0';
+  data_in_re      <= sig_rcs and data_in_rcs and sig_re;
   data_in_rdata   <= (
     7 => data_in_value_rdata(7),
     6 => data_in_value_rdata(6),
@@ -245,8 +268,8 @@ begin  -- architecture rtl
   --==================================
 
 
-  data_out_rcs     <= '1' when     (pbi_ini_i.addr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(3,GPIO_ADDR_WIDTH))) else '0';
-  data_out_re      <= pbi_ini_i.cs and data_out_rcs and pbi_ini_i.re;
+  data_out_rcs     <= '1' when     (sig_raddr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(3,GPIO_ADDR_WIDTH))) else '0';
+  data_out_re      <= sig_rcs and data_out_rcs and sig_re;
   data_out_rdata   <= (
     7 => data_out_value_rdata(7),
     6 => data_out_value_rdata(6),
@@ -258,9 +281,9 @@ begin  -- architecture rtl
     0 => data_out_value_rdata(0),
     others => '0') when data_out_rcs = '1' else (others => '0');
 
-  data_out_wcs     <= '1' when     (pbi_ini_i.addr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(0,GPIO_ADDR_WIDTH))) or (pbi_ini_i.addr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(3,GPIO_ADDR_WIDTH))) else '0';
-  data_out_we      <= pbi_ini_i.cs and data_out_wcs and pbi_ini_i.we;
-  data_out_wdata   <= pbi_ini_i.wdata;
+  data_out_wcs     <= '1' when     (sig_waddr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(0,GPIO_ADDR_WIDTH))) or (sig_waddr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(3,GPIO_ADDR_WIDTH))) else '0';
+  data_out_we      <= sig_wcs and data_out_wcs and sig_we;
+  data_out_wdata   <= sig_wdata;
 
   ins_data_out : entity work.csr_reg(rtl)
     generic map
@@ -283,12 +306,12 @@ begin  -- architecture rtl
       ,hw_sw_we_o    => sw2hw_o.data_out.we
       );
 
-  pbi_tgt_o.busy  <= 
+  sig_rbusy  <= 
     data_rbusy or
     data_oe_rbusy or
     data_in_rbusy or
     data_out_rbusy;
-  pbi_tgt_o.rdata <= 
+  sig_rdata <= 
     data_rdata or
     data_oe_rdata or
     data_in_rdata or
@@ -296,6 +319,14 @@ begin  -- architecture rtl
 
 -- pragma translate_off
 
+  process is
+  begin  -- process
+
+    report "Address Size : "&integer'image(sig_raddr'length) severity note;
+    report "Data    Size : "&integer'image(sig_raddr'length) severity note;
+
+    wait;
+  end process;
 
 -- pragma translate_on  
 
