@@ -6,7 +6,7 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2013-12-26
--- Last update: 2025-03-22
+-- Last update: 2025-04-02
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -62,7 +62,11 @@ entity GPIO is
     
     -- To/From IT Ctrl
     interrupt_o      : out   std_logic;
-    interrupt_ack_i  : in    std_logic
+    interrupt_ack_i  : in    std_logic;
+
+    sw2hw_i          : in    GPIO_sw2hw_t;
+    hw2sw_o          : out   GPIO_hw2sw_t
+
     );
 end GPIO;
 
@@ -83,37 +87,21 @@ architecture rtl of GPIO is
   -----------------------------------------------------------------------------
   -- Signal
   -----------------------------------------------------------------------------
-  signal sw2hw : GPIO_sw2hw_t;
-  signal hw2sw : GPIO_hw2sw_t;
   
 begin
 
   -----------------------------------------------------------------------------
-  -- CSR
-  -----------------------------------------------------------------------------
-
-  ins_csr : entity work.GPIO_registers(rtl)
-  port map(
-    clk_i     => clk_i   ,
-    arst_b_i  => arstn_i ,
-    pbi_ini_i => pbi_ini_i,
-    pbi_tgt_o => pbi_tgt_o,
-    sw2hw_o   => sw2hw    ,
-    hw2sw_i   => hw2sw   
-  );
-
-  -----------------------------------------------------------------------------
   -- Data I/O
   -----------------------------------------------------------------------------
-  data_o              <= sw2hw.data_out.value(data_o   'range);
-  data_oe_o           <= sw2hw.data_oe .value(data_oe_o'range);
+  data_o                <= sw2hw_i.data_out.value(data_o   'range);
+  data_oe_o             <= sw2hw_i.data_oe .value(data_oe_o'range);
 
-  hw2sw.data.value    <= ((sw2hw.data_out.value and     sw2hw.data_oe .value) or
-                          (sw2hw.data_in .value and not sw2hw.data_oe .value));
-  hw2sw.data.we       <= '1';
+  hw2sw_o.data.value    <= ((sw2hw_i.data_out.value and     sw2hw_i.data_oe .value) or
+                            (sw2hw_i.data_in .value and not sw2hw_i.data_oe .value));
+  hw2sw_o.data.we       <= '1';
 
-  hw2sw.data_in.value <= std_logic_vector(resize(unsigned(data_i), hw2sw.data_in.value'length));
-  hw2sw.data_in.we    <= '1';
+  hw2sw_o.data_in.value <= std_logic_vector(resize(unsigned(data_i), hw2sw_o.data_in.value'length));
+  hw2sw_o.data_in.we    <= '1';
 
   -----------------------------------------------------------------------------
   -- IP Output

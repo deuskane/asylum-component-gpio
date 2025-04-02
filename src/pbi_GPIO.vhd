@@ -6,7 +6,7 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2017-03-30
--- Last update: 2025-03-09
+-- Last update: 2025-04-02
 -- Platform   : 
 -- Standard   : VHDL'87
 -------------------------------------------------------------------------------
@@ -58,27 +58,21 @@ entity pbi_GPIO is
 end entity pbi_GPIO;
 
 architecture rtl of pbi_GPIO is
-  signal pbi_ini : pbi_ini_t(addr (GPIO_ADDR_WIDTH-1 downto 0),
-                              wdata(PBI_DATA_WIDTH -1 downto 0));
-  signal pbi_tgt : pbi_tgt_t(rdata(PBI_DATA_WIDTH -1 downto 0));
-  
+
+  signal sw2hw                  : GPIO_sw2hw_t;
+  signal hw2sw                  : GPIO_hw2sw_t;
+
 begin  -- architecture rtl
 
-  ins_pbi_wrapper_target : entity work.pbi_wrapper_target(rtl)
-  generic map(
-    SIZE_DATA      => PBI_DATA_WIDTH ,
-    SIZE_ADDR_IP   => GPIO_ADDR_WIDTH,
-    ID             => ID
-     )
+  ins_csr : entity work.GPIO_registers(rtl)
   port map(
-    clk_i          => clk_i         ,
-    cke_i          => cke_i         ,
-    arstn_i        => arstn_i       ,
-    pbi_ini_i      => pbi_ini_i     ,
-    pbi_tgt_o      => pbi_tgt_o     ,     
-    pbi_ini_o      => pbi_ini       ,
-    pbi_tgt_i      => pbi_tgt     
-    );
+    clk_i     => clk_i           ,
+    arst_b_i  => arstn_i         ,
+    pbi_ini_i => pbi_ini_i       ,
+    pbi_tgt_o => pbi_tgt_o       ,
+    sw2hw_o   => sw2hw           ,
+    hw2sw_i   => hw2sw   
+  );
 
   ins_GPIO : entity work.GPIO(rtl)
   generic map(
@@ -91,13 +85,15 @@ begin  -- architecture rtl
     clk_i            => clk_i          ,
     cke_i            => cke_i          ,
     arstn_i          => arstn_i        ,
-    pbi_ini_i        => pbi_ini        ,
-    pbi_tgt_o        => pbi_tgt        ,  
+    pbi_ini_i        => pbi_ini_i        ,
+    pbi_tgt_o        => pbi_tgt_o        ,  
     data_i           => data_i         ,
     data_o           => data_o         ,
     data_oe_o        => data_oe_o      ,
     interrupt_o      => interrupt_o    ,
-    interrupt_ack_i  => interrupt_ack_i
+    interrupt_ack_i  => interrupt_ack_i,
+    sw2hw_i          => sw2hw          ,
+    hw2sw_o          => hw2sw 
     );
   
 end architecture rtl;

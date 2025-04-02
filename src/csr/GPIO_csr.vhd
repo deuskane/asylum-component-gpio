@@ -85,7 +85,7 @@ begin  -- architecture rtl
   --==================================
 
 
-  data_rcs     <= '1' when     (pbi_ini_i.addr = std_logic_vector(to_unsigned(0,GPIO_ADDR_WIDTH))) else '0';
+  data_rcs     <= '1' when     (pbi_ini_i.addr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(0,GPIO_ADDR_WIDTH))) else '0';
   data_re      <= pbi_ini_i.cs and data_rcs and pbi_ini_i.re;
   data_rdata   <= (
     7 => data_value_rdata(7),
@@ -137,7 +137,7 @@ begin  -- architecture rtl
   --==================================
 
 
-  data_oe_rcs     <= '1' when     (pbi_ini_i.addr = std_logic_vector(to_unsigned(1,GPIO_ADDR_WIDTH))) else '0';
+  data_oe_rcs     <= '1' when     (pbi_ini_i.addr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(1,GPIO_ADDR_WIDTH))) else '0';
   data_oe_re      <= pbi_ini_i.cs and data_oe_rcs and pbi_ini_i.re;
   data_oe_rdata   <= (
     7 => data_oe_value_rdata(7),
@@ -150,7 +150,7 @@ begin  -- architecture rtl
     0 => data_oe_value_rdata(0),
     others => '0') when data_oe_rcs = '1' else (others => '0');
 
-  data_oe_wcs     <= '1' when     (pbi_ini_i.addr = std_logic_vector(to_unsigned(1,GPIO_ADDR_WIDTH))) else '0';
+  data_oe_wcs     <= '1' when     (pbi_ini_i.addr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(1,GPIO_ADDR_WIDTH))) else '0';
   data_oe_we      <= pbi_ini_i.cs and data_oe_wcs and pbi_ini_i.we;
   data_oe_wdata   <= pbi_ini_i.wdata;
 
@@ -191,7 +191,7 @@ begin  -- architecture rtl
   --==================================
 
 
-  data_in_rcs     <= '1' when     (pbi_ini_i.addr = std_logic_vector(to_unsigned(2,GPIO_ADDR_WIDTH))) else '0';
+  data_in_rcs     <= '1' when     (pbi_ini_i.addr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(2,GPIO_ADDR_WIDTH))) else '0';
   data_in_re      <= pbi_ini_i.cs and data_in_rcs and pbi_ini_i.re;
   data_in_rdata   <= (
     7 => data_in_value_rdata(7),
@@ -245,7 +245,7 @@ begin  -- architecture rtl
   --==================================
 
 
-  data_out_rcs     <= '1' when     (pbi_ini_i.addr = std_logic_vector(to_unsigned(3,GPIO_ADDR_WIDTH))) else '0';
+  data_out_rcs     <= '1' when     (pbi_ini_i.addr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(3,GPIO_ADDR_WIDTH))) else '0';
   data_out_re      <= pbi_ini_i.cs and data_out_rcs and pbi_ini_i.re;
   data_out_rdata   <= (
     7 => data_out_value_rdata(7),
@@ -258,7 +258,7 @@ begin  -- architecture rtl
     0 => data_out_value_rdata(0),
     others => '0') when data_out_rcs = '1' else (others => '0');
 
-  data_out_wcs     <= '1' when     (pbi_ini_i.addr = std_logic_vector(to_unsigned(0,GPIO_ADDR_WIDTH))) or (pbi_ini_i.addr = std_logic_vector(to_unsigned(3,GPIO_ADDR_WIDTH))) else '0';
+  data_out_wcs     <= '1' when     (pbi_ini_i.addr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(0,GPIO_ADDR_WIDTH))) or (pbi_ini_i.addr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(3,GPIO_ADDR_WIDTH))) else '0';
   data_out_we      <= pbi_ini_i.cs and data_out_wcs and pbi_ini_i.we;
   data_out_wdata   <= pbi_ini_i.wdata;
 
@@ -293,4 +293,10 @@ begin  -- architecture rtl
     data_oe_rdata or
     data_in_rdata or
     data_out_rdata;
+
+-- pragma translate_off
+
+
+-- pragma translate_on  
+
 end architecture rtl;
