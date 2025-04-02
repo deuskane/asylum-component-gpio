@@ -33,8 +33,7 @@ entity pbi_GPIO is
     NB_IO            : natural:=8;     -- Number of IO. Must be <= SIZE_DATA
     DATA_OE_INIT     : std_logic_vector; -- Direction of the IO after a reset
     DATA_OE_FORCE    : std_logic_vector; -- Can change the direction of the IO
-    IT_ENABLE        : boolean:=false; -- GPIO can generate interruption
-    ID               : std_logic_vector (PBI_ADDR_WIDTH-1 downto 0) := (others => '0')
+    IT_ENABLE        : boolean:=false    -- GPIO can generate interruption
     );
   port   (
     clk_i            : in    std_logic;
