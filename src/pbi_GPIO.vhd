@@ -85,8 +85,6 @@ begin  -- architecture rtl
     clk_i            => clk_i          ,
     cke_i            => cke_i          ,
     arstn_i          => arstn_i        ,
-    pbi_ini_i        => pbi_ini_i        ,
-    pbi_tgt_o        => pbi_tgt_o        ,  
     data_i           => data_i         ,
     data_o           => data_o         ,
     data_oe_o        => data_oe_o      ,

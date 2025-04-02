@@ -51,10 +51,6 @@ entity GPIO is
     cke_i            : in    std_logic;
     arstn_i          : in    std_logic; -- asynchronous reset
 
-    -- To IP
-    pbi_ini_i        : in    pbi_ini_t;
-    pbi_tgt_o        : out   pbi_tgt_t;
-
     -- To/From IO
     data_i           : in    std_logic_vector (NB_IO-1     downto 0);
     data_o           : out   std_logic_vector (NB_IO-1     downto 0);
