@@ -316,18 +316,4 @@ begin  -- architecture rtl
     data_oe_rdata or
     data_in_rdata or
     data_out_rdata;
-
--- pragma translate_off
-
-  process is
-  begin  -- process
-
-    report "Address Size : "&integer'image(sig_raddr'length) severity note;
-    report "Data    Size : "&integer'image(sig_raddr'length) severity note;
-
-    wait;
-  end process;
-
--- pragma translate_on  
-
 end architecture rtl;
