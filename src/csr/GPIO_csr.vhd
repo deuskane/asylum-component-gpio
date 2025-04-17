@@ -42,40 +42,40 @@ architecture rtl of GPIO_registers is
   signal   sig_rdata : std_logic_vector(pbi_tgt_o.rdata'length-1 downto 0);
   signal   sig_rbusy : std_logic;
 
-  signal   data_wcs   : std_logic;
-  signal   data_rcs   : std_logic;
-  signal   data_we    : std_logic;
-  signal   data_re    : std_logic;
-  signal   data_rdata : std_logic_vector(8-1 downto 0);
-  signal   data_wdata : std_logic_vector(8-1 downto 0);
-  signal   data_rbusy : std_logic;
+  signal   data_wcs       : std_logic;
+  signal   data_we        : std_logic;
+  signal   data_wdata     : std_logic_vector(8-1 downto 0);
+  signal   data_rcs       : std_logic;
+  signal   data_re        : std_logic;
+  signal   data_rdata     : std_logic_vector(8-1 downto 0);
+  signal   data_rbusy     : std_logic;
   signal   data_value_rdata : std_logic_vector(7 downto 0);
 
-  signal   data_oe_wcs   : std_logic;
-  signal   data_oe_rcs   : std_logic;
-  signal   data_oe_we    : std_logic;
-  signal   data_oe_re    : std_logic;
-  signal   data_oe_rdata : std_logic_vector(8-1 downto 0);
-  signal   data_oe_wdata : std_logic_vector(8-1 downto 0);
-  signal   data_oe_rbusy : std_logic;
+  signal   data_oe_wcs       : std_logic;
+  signal   data_oe_we        : std_logic;
+  signal   data_oe_wdata     : std_logic_vector(8-1 downto 0);
+  signal   data_oe_rcs       : std_logic;
+  signal   data_oe_re        : std_logic;
+  signal   data_oe_rdata     : std_logic_vector(8-1 downto 0);
+  signal   data_oe_rbusy     : std_logic;
   signal   data_oe_value_rdata : std_logic_vector(7 downto 0);
 
-  signal   data_in_wcs   : std_logic;
-  signal   data_in_rcs   : std_logic;
-  signal   data_in_we    : std_logic;
-  signal   data_in_re    : std_logic;
-  signal   data_in_rdata : std_logic_vector(8-1 downto 0);
-  signal   data_in_wdata : std_logic_vector(8-1 downto 0);
-  signal   data_in_rbusy : std_logic;
+  signal   data_in_wcs       : std_logic;
+  signal   data_in_we        : std_logic;
+  signal   data_in_wdata     : std_logic_vector(8-1 downto 0);
+  signal   data_in_rcs       : std_logic;
+  signal   data_in_re        : std_logic;
+  signal   data_in_rdata     : std_logic_vector(8-1 downto 0);
+  signal   data_in_rbusy     : std_logic;
   signal   data_in_value_rdata : std_logic_vector(7 downto 0);
 
-  signal   data_out_wcs   : std_logic;
-  signal   data_out_rcs   : std_logic;
-  signal   data_out_we    : std_logic;
-  signal   data_out_re    : std_logic;
-  signal   data_out_rdata : std_logic_vector(8-1 downto 0);
-  signal   data_out_wdata : std_logic_vector(8-1 downto 0);
-  signal   data_out_rbusy : std_logic;
+  signal   data_out_wcs       : std_logic;
+  signal   data_out_we        : std_logic;
+  signal   data_out_wdata     : std_logic_vector(8-1 downto 0);
+  signal   data_out_rcs       : std_logic;
+  signal   data_out_re        : std_logic;
+  signal   data_out_rdata     : std_logic_vector(8-1 downto 0);
+  signal   data_out_rbusy     : std_logic;
   signal   data_out_value_rdata : std_logic_vector(7 downto 0);
 
 begin  -- architecture rtl
@@ -119,7 +119,7 @@ begin  -- architecture rtl
     2 => data_value_rdata(2),
     1 => data_value_rdata(1),
     0 => data_value_rdata(0),
-    others => '0') when data_rcs = '1' else (others => '0');
+    others => '0');
 
   data_wcs     <= '0';
   data_we      <= '0';
@@ -171,7 +171,7 @@ begin  -- architecture rtl
     2 => data_oe_value_rdata(2),
     1 => data_oe_value_rdata(1),
     0 => data_oe_value_rdata(0),
-    others => '0') when data_oe_rcs = '1' else (others => '0');
+    others => '0');
 
   data_oe_wcs     <= '1' when     (sig_waddr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(1,GPIO_ADDR_WIDTH))) else '0';
   data_oe_we      <= sig_wcs and data_oe_wcs and sig_we;
@@ -225,7 +225,7 @@ begin  -- architecture rtl
     2 => data_in_value_rdata(2),
     1 => data_in_value_rdata(1),
     0 => data_in_value_rdata(0),
-    others => '0') when data_in_rcs = '1' else (others => '0');
+    others => '0');
 
   data_in_wcs     <= '0';
   data_in_we      <= '0';
@@ -279,7 +279,7 @@ begin  -- architecture rtl
     2 => data_out_value_rdata(2),
     1 => data_out_value_rdata(1),
     0 => data_out_value_rdata(0),
-    others => '0') when data_out_rcs = '1' else (others => '0');
+    others => '0');
 
   data_out_wcs     <= '1' when     (sig_waddr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(0,GPIO_ADDR_WIDTH))) or (sig_waddr(GPIO_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(3,GPIO_ADDR_WIDTH))) else '0';
   data_out_we      <= sig_wcs and data_out_wcs and sig_we;
@@ -306,14 +306,16 @@ begin  -- architecture rtl
       ,hw_sw_we_o    => sw2hw_o.data_out.we
       );
 
-  sig_rbusy  <= 
-    data_rbusy or
-    data_oe_rbusy or
-    data_in_rbusy or
-    data_out_rbusy;
+  sig_rbusy <= 
+    data_rbusy when data_rcs = '1' else
+    data_oe_rbusy when data_oe_rcs = '1' else
+    data_in_rbusy when data_in_rcs = '1' else
+    data_out_rbusy when data_out_rcs = '1' else
+    '0'; -- Bad Address, no busy
   sig_rdata <= 
-    data_rdata or
-    data_oe_rdata or
-    data_in_rdata or
-    data_out_rdata;
+    data_rdata when data_rcs = '1' else
+    data_oe_rdata when data_oe_rcs = '1' else
+    data_in_rdata when data_in_rcs = '1' else
+    data_out_rdata when data_out_rcs = '1' else
+    (others => '0'); -- Bad Address, return 0
 end architecture rtl;
