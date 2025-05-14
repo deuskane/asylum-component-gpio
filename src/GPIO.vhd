@@ -6,22 +6,18 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2013-12-26
--- Last update: 2025-04-02
+-- Last update: 2025-05-14
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
 -- Description:
 -- It's a GPIO component
--- Register Map :
--- [0] Read/Write : data    (with data_oe mask apply)
--- [1] Read/Write : data_oe (if data_oe_force = 0)
--- [2] Read       : data_in
--- [3] Read/Write : data_out
 -------------------------------------------------------------------------------
 -- Copyright (c) 2013 
 -------------------------------------------------------------------------------
 -- Revisions  :
 -- Date        Version  Author   Description
+-- 2025-05-14  1.0      mrosiere Delete parameters
 -- 2025-03-05  0.6      mrosiere use csr from regtool
 -- 2022-07-11  0.5      mrosiere DATA_OE_<INIT/FORCE> in NB_IO
 -- 2018-06-01  0.4      mrosiere Add to address for a direct access at data_in_r
@@ -42,8 +38,6 @@ use     work.pbi_pkg.all;
 entity GPIO is
   generic(
     NB_IO            : natural:=8;       -- Number of IO. Must be <= SIZE_DATA
-    DATA_OE_INIT     : std_logic_vector; -- Direction of the IO after a reset
-    DATA_OE_FORCE    : std_logic_vector; -- Can change the direction of the IO
     IT_ENABLE        : boolean:=false    -- GPIO can generate interruption
     );
   port   (

@@ -6,7 +6,7 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2017-03-30
--- Last update: 2025-04-02
+-- Last update: 2025-05-14
 -- Platform   : 
 -- Standard   : VHDL'87
 -------------------------------------------------------------------------------
@@ -16,8 +16,10 @@
 -------------------------------------------------------------------------------
 -- Revisions  :
 -- Date        Version  Author  Description
+-- 2025-05-14  0.3      mrosiere Delete parameters DATA_OE_FORCE,
+--                               csr use DATA_OE_INIT
 -- 2025-03-05  0.2      mrosiere use csr from regtool
--- 2017-03-30  0.1      rosiere	Created
+-- 2017-03-30  0.1      mrosiere Created
 -------------------------------------------------------------------------------
 
 library IEEE;
@@ -32,7 +34,6 @@ entity pbi_GPIO is
   generic(
     NB_IO            : natural:=8;     -- Number of IO. Must be <= SIZE_DATA
     DATA_OE_INIT     : std_logic_vector; -- Direction of the IO after a reset
-    DATA_OE_FORCE    : std_logic_vector; -- Can change the direction of the IO
     IT_ENABLE        : boolean:=false    -- GPIO can generate interruption
     );
   port   (
@@ -64,6 +65,9 @@ architecture rtl of pbi_GPIO is
 begin  -- architecture rtl
 
   ins_csr : entity work.GPIO_registers(rtl)
+  generic map(
+    DATA_OE_INIT     => DATA_OE_INIT 
+    )
   port map(
     clk_i     => clk_i           ,
     arst_b_i  => arstn_i         ,
@@ -75,9 +79,7 @@ begin  -- architecture rtl
 
   ins_GPIO : entity work.GPIO(rtl)
   generic map(
-    NB_IO            => NB_IO         ,
-    DATA_OE_INIT     => DATA_OE_INIT  ,
-    DATA_OE_FORCE    => DATA_OE_FORCE ,
+    NB_IO            => NB_IO          ,
     IT_ENABLE        => IT_ENABLE    
     )
   port map(

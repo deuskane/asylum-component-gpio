@@ -16,6 +16,9 @@ use     work.pbi_pkg.all;
 -- Width       : 8
 --==================================
 entity GPIO_registers is
+  generic (
+    DATA_OE_INIT : std_logic_vector -- Direction of the IO after a reset
+  );
   port (
     -- Clock and Reset
     clk_i      : in  std_logic;
@@ -63,7 +66,7 @@ architecture rtl of GPIO_registers is
   signal   data_rbusy     : std_logic;
 
   constant INIT_data_oe : std_logic_vector(8-1 downto 0) :=
-             "00000000" -- value
+             DATA_OE_INIT -- value
            ;
   signal   data_oe_wcs       : std_logic;
   signal   data_oe_we        : std_logic;
@@ -271,7 +274,7 @@ begin  -- architecture rtl
     data_oe_rdata   <= (others => '0');
     data_oe_wcs      <= '0';
     data_oe_wbusy    <= '0';
-    sw2hw_o.data_oe.value <= "00000000";
+    sw2hw_o.data_oe.value <= DATA_OE_INIT;
     sw2hw_o.data_oe.re <= '0';
     sw2hw_o.data_oe.we <= '0';
   end generate gen_data_oe_b;

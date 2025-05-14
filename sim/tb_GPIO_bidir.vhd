@@ -6,7 +6,7 @@
 -- Author     : mrosiere
 -- Company    : 
 -- Created    : 2017-03-25
--- Last update: 2025-03-09
+-- Last update: 2025-05-14
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -148,7 +148,6 @@ begin
   generic map(
     NB_IO            => NB_IO          ,
     DATA_OE_INIT     => DATA_OE_INIT   ,
-    DATA_OE_FORCE    => DATA_OE_FORCE  ,
     IT_ENABLE        => IT_ENABLE    
     )
   port map(
