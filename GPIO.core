@@ -21,9 +21,10 @@ CAPI=2:
 # 2025-04-02  1.5.0    mrosiere Remove pbi_target_wrapper
 # 2025-05-14  1.6.0    mrosiere Delete parameters DATA_OE_FORCE,
 #                               csr use DATA_OE_INIT
+# 2025-09-05  1.6.1    mrosiere Add Package
 #-----------------------------------------------------------------------------
 
-name        : asylum:component:GPIO:1.6.0
+name        : asylum:component:GPIO:1.6.1
 description : GPIO Module
 
 #=========================================
@@ -48,6 +49,8 @@ filesets:
   hdl:
   #---------------------------------------
     files        :
+      - hdl/gpio_pkg.vhd
+      - hdl/GPIO.vhd
       - hdl/GPIO.vhd
       - hdl/pbi_GPIO.vhd
     file_type    : vhdlSource
