@@ -6,7 +6,7 @@
 -- Author     : mrosiere
 -- Company    : 
 -- Created    : 2017-03-25
--- Last update: 2025-05-14
+-- Last update: 2025-09-06
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -31,6 +31,7 @@ use ieee.numeric_std.all;
 
 library work;
 use     work.pbi_pkg.all;
+use     work.GPIO_pkg.all;
 
 entity tb_GPIO_bidir is
 
@@ -144,7 +145,7 @@ begin
   busy_o1         <= pbi_tgt_o1.busy ;
 
 
-  GPIO : entity work.GPIO(rtl)
+  dut_GPIO : pbi_GPIO
   generic map(
     NB_IO            => NB_IO          ,
     DATA_OE_INIT     => DATA_OE_INIT   ,
@@ -165,7 +166,7 @@ begin
     interrupt_ack_i  => interrupt_ack_i
     );
 
-  GPIO_v1 : entity work.GPIO_v1(rtl)
+  dut_GPIO_v1 : GPIO_v1
   generic map(
     SIZE_ADDR        => SIZE_ADDR      ,
     SIZE_DATA        => SIZE_DATA      ,

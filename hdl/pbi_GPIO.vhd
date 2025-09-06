@@ -6,7 +6,7 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2017-03-30
--- Last update: 2025-05-14
+-- Last update: 2025-09-06
 -- Platform   : 
 -- Standard   : VHDL'87
 -------------------------------------------------------------------------------
@@ -28,6 +28,7 @@ use     IEEE.numeric_std.ALL;
 library work;
 library work;
 use     work.pbi_pkg.all;
+use     work.GPIO_pkg.all;
 use     work.GPIO_csr_pkg.all;
 
 entity pbi_GPIO is
@@ -64,7 +65,7 @@ architecture rtl of pbi_GPIO is
 
 begin  -- architecture rtl
 
-  ins_csr : entity work.GPIO_registers(rtl)
+  ins_csr : GPIO_registers
   generic map(
     DATA_OE_INIT     => DATA_OE_INIT 
     )
@@ -77,7 +78,7 @@ begin  -- architecture rtl
     hw2sw_i   => hw2sw   
   );
 
-  ins_GPIO : entity work.GPIO(rtl)
+  ins_GPIO : GPIO
   generic map(
     NB_IO            => NB_IO          ,
     IT_ENABLE        => IT_ENABLE    

@@ -6,7 +6,7 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2013-12-26
--- Last update: 2025-05-14
+-- Last update: 2025-09-06
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -32,7 +32,6 @@ use     IEEE.STD_LOGIC_1164.ALL;
 use     IEEE.numeric_std.ALL;
 library work;
 use     work.GPIO_csr_pkg.ALL;
-library work;
 use     work.pbi_pkg.all;
 
 entity GPIO is

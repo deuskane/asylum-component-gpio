@@ -8,6 +8,8 @@ use     IEEE.NUMERIC_STD.ALL;
 library work;
 use     work.GPIO_csr_pkg.ALL;
 library work;
+use     work.csr_pkg.ALL;
+library work;
 use     work.pbi_pkg.all;
 
 --==================================
@@ -173,7 +175,7 @@ begin  -- architecture rtl
     data_wdata_hw(7 downto 0) <= hw2sw_i.data.value; -- value
     sw2hw_o.data.value <= data_rdata_hw(7 downto 0); -- value
 
-    ins_data : entity work.csr_ext(rtl)
+    ins_data : csr_ext
       generic map
         (WIDTH         => 8
         )
@@ -243,7 +245,7 @@ begin  -- architecture rtl
     data_oe_wdata_sw(7 downto 0) <= data_oe_wdata(7 downto 0); -- value
     sw2hw_o.data_oe.value <= data_oe_rdata_hw(7 downto 0); -- value
 
-    ins_data_oe : entity work.csr_reg(rtl)
+    ins_data_oe : csr_reg
       generic map
         (WIDTH         => 8
         ,INIT          => INIT_data_oe
@@ -318,7 +320,7 @@ begin  -- architecture rtl
     data_in_wdata_hw(7 downto 0) <= hw2sw_i.data_in.value; -- value
     sw2hw_o.data_in.value <= data_in_rdata_hw(7 downto 0); -- value
 
-    ins_data_in : entity work.csr_reg(rtl)
+    ins_data_in : csr_reg
       generic map
         (WIDTH         => 8
         ,INIT          => INIT_data_in
@@ -390,7 +392,7 @@ begin  -- architecture rtl
     data_out_wdata_sw(7 downto 0) <= data_out_wdata(7 downto 0); -- value
     sw2hw_o.data_out.value <= data_out_rdata_hw(7 downto 0); -- value
 
-    ins_data_out : entity work.csr_reg(rtl)
+    ins_data_out : csr_reg
       generic map
         (WIDTH         => 8
         ,INIT          => INIT_data_out

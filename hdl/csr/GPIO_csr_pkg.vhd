@@ -4,6 +4,8 @@ library IEEE;
 use     IEEE.STD_LOGIC_1164.ALL;
 use     IEEE.NUMERIC_STD.ALL;
 
+library work;
+use     work.pbi_pkg.all;
 --==================================
 -- Module      : GPIO
 -- Description : CSR for General Purpose I/O
@@ -127,5 +129,26 @@ package GPIO_csr_pkg is
 
   constant GPIO_ADDR_WIDTH : natural := 2;
   constant GPIO_DATA_WIDTH : natural := 8;
+
+  ------------------------------------
+  -- Component
+  ------------------------------------
+component GPIO_registers is
+  generic (
+    DATA_OE_INIT : std_logic_vector -- Direction of the IO after a reset
+  );
+  port (
+    -- Clock and Reset
+    clk_i      : in  std_logic;
+    arst_b_i   : in  std_logic;
+    -- Bus
+    pbi_ini_i  : in  pbi_ini_t;
+    pbi_tgt_o  : out pbi_tgt_t;
+    -- CSR
+    sw2hw_o    : out GPIO_sw2hw_t;
+    hw2sw_i    : in  GPIO_hw2sw_t
+  );
+end component GPIO_registers;
+
 
 end package GPIO_csr_pkg;
