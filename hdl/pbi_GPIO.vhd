@@ -25,11 +25,11 @@
 library IEEE;
 use     IEEE.STD_LOGIC_1164.ALL;
 use     IEEE.numeric_std.ALL;
-library work;
-library work;
-use     work.pbi_pkg.all;
-use     work.GPIO_pkg.all;
-use     work.GPIO_csr_pkg.all;
+library asylum;
+library asylum;
+use     asylum.pbi_pkg.all;
+use     asylum.GPIO_pkg.all;
+use     asylum.GPIO_csr_pkg.all;
 
 entity pbi_GPIO is
   generic(

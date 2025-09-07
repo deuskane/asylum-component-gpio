@@ -29,9 +29,9 @@ use ieee.numeric_std.all;
 --use ieee.numeric_bit.all;
 --use ieee.std_logic_arith.all;
 
-library work;
-use     work.pbi_pkg.all;
-use     work.GPIO_pkg.all;
+library asylum;
+use     asylum.pbi_pkg.all;
+use     asylum.GPIO_pkg.all;
 
 entity tb_GPIO_bidir is
 

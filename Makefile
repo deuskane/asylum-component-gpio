@@ -1,8 +1,8 @@
 #-----------------------------------------------------------------------------
 # Title      : Makefile
-# Project    : OB8_GPIO
+# Project    : PicoSoC
 #-----------------------------------------------------------------------------
-# File       : OB8_GPIO.vhd
+# File       : PicoSoC.vhd
 # Author     : Mathieu Rosiere
 #-----------------------------------------------------------------------------
 # Description: Makefile to execute fusesoc
@@ -18,24 +18,31 @@
 #=============================================================================
 # Variables
 #=============================================================================
-SHELL    	 = /bin/bash
+SHELL            = /bin/bash
 
-FILE_CORE	?= GPIO.core
-TARGET          ?= sim_testcase
-TOOL		?= ghdl
+include mk/defs.mk
+
+FILE_TARGETS     = mk/targets.txt
 
 CORE_NAME       := $(shell grep ^name $(FILE_CORE) | head -n1 | tr -d ' ')
 
-IP_VENDOR	 = $(shell echo $(CORE_NAME) | cut -d':' -f2)
-IP_LIBRARY 	 = $(shell echo $(CORE_NAME) | cut -d':' -f3)
-IP_NAME		 = $(shell echo $(CORE_NAME) | cut -d':' -f4)
-IP_VERSION	 = $(shell echo $(CORE_NAME) | cut -d':' -f5)
-VLNV		 = $(IP_VENDOR):$(IP_LIBRARY):$(IP_NAME):$(IP_VERSION)
+IP_VENDOR        = $(shell echo $(CORE_NAME) | cut -d':' -f2)
+IP_LIBRARY       = $(shell echo $(CORE_NAME) | cut -d':' -f3)
+IP_NAME          = $(shell echo $(CORE_NAME) | cut -d':' -f4)
+IP_VERSION       = $(shell echo $(CORE_NAME) | cut -d':' -f5)
+VLNV             = $(IP_VENDOR):$(IP_LIBRARY):$(IP_NAME):$(IP_VERSION)
 
-TARGETS_SIM	:= $(shell fusesoc core-info $(VLNV) | grep sim_ | cut -d ':' -f1 | tr -d ' ')
-TARGETS_EMU	:= $(shell fusesoc core-info $(VLNV) | grep emu_ | cut -d ':' -f1 | tr -d ' ')
+TARGETS_SIM     := $(shell cat $(FILE_TARGETS) | grep sim_   | cut -d ':' -f1 | tr -d ' ')
+TARGETS_EMU     := $(shell cat $(FILE_TARGETS) | grep emu_   | cut -d ':' -f1 | tr -d ' ')
+TARGETS_LINT    := $(shell cat $(FILE_TARGETS) | grep lint_  | cut -d ':' -f1 | tr -d ' ')
 
-PATH_BUILD	?= $(CURDIR)/build
+PATH_BUILD      ?= $(CURDIR)/build
+
+FUSESOC_CACHE    = ~/.cache/fusesoc
+FUSESOC_OPT     += --build-root $(PATH_BUILD)
+FUSESOC_OPT     += --no-export
+
+NONREG          ?= SIM
 
 #=============================================================================
 # Rules
@@ -43,40 +50,58 @@ PATH_BUILD	?= $(CURDIR)/build
 
 #--------------------------------------------------------
 # Display list of target
-help :
+help : $(FILE_TARGETS)
 #--------------------------------------------------------
 	@echo ""
 	@echo ">>>>>>>  Makefile Help"
 	@echo ""
-	@echo "===========| Variables"
-	@echo "VLNV       : Vendor/Library/Name/Version"
-	@echo "             $(VLNV)"
-	@echo "TARGET     : Specific Target for Fusesoc"
-	@echo "             $(TARGET)"
-	@echo "TOOL       : Specific Tool for Fusesoc"
-	@echo "             $(TOOL)"
-	@echo "TARGET_SIM : All simulation targets"
-	@echo "             $(TARGETS_SIM)"
-	@echo "TARGET_EMU : All emulation targets"
-	@echo "             $(TARGETS_EMU)"
-	@echo "PATH_BUILD : Path to build directory"
-	@echo "             $(PATH_BUILD)"
+	@echo "==============| Variables"
+	@echo "VLNV          : Vendor/Library/Name/Version"
+	@echo "                $(VLNV)"
+	@echo "TARGET        : Specific Target for Fusesoc"
+	@echo "                $(TARGET)"
+	@echo "TOOL          : Specific Tool for Fusesoc"
+	@echo "                $(TOOL)"
+	@echo "TARGETS_SIM   : All simulation targets"
+	@for target in $(TARGETS_SIM); do \
+	 echo "                * $${target}"; \
+	 done
+	@echo "TARGETS_EMU   : All emulation targets"
+	@for target in $(TARGETS_EMU); do \
+	 echo "                * $${target}"; \
+	 done
+	@echo "TARGETS_LINT  : All lint & static checks targets"
+	@for target in $(TARGETS_LINT); do \
+	 echo "                * $${target}"; \
+	 done
+	@echo "NONREG        : Non Regression Type (SIM/EMU/LINT)"
+	@echo "                $(NONREG)"
+	@echo "PATH_BUILD    : Path to build directory"
+	@echo "                $(PATH_BUILD)"
 	@echo ""
-	@echo "===========| Rules"
-	@echo "help       : Print this message"
-	@echo "info       : Display library list and cores list"
-	@echo "nonreg     : Run all simulation targets"
-	@echo "setup      : Execute Setup stage of fusesoc flow for specific target and tool"
-	@echo "build      : Execute Build stage of fusesoc flow for specific target and tool"
-	@echo "run        : Execute Run   stage of fusesoc flow for specific target and tool"
-	@echo "*          : Run target with default tool"
-	@echo "clean      : delete build directory"
+	@echo "==============| Rules"
+	@echo "help          : Print this message"
+	@echo "info          : Display library list and cores list"
+	@echo "clean         : delete build directory"
+	@echo "nonreg        : Run all simulation targets"
 	@echo ""
-	@echo ">>>>>>>  Core Information"
+	@echo "target        : Execute all   stages of fusesoc flow for specific target and tool"
+	@echo "setup         : Execute Setup stage  of fusesoc flow for specific target and tool"
+	@echo "build         : Execute Build stage  of fusesoc flow for specific target and tool"
+	@echo "run           : Execute Run   stage  of fusesoc flow for specific target and tool"
+	@echo "*             : Run target with default tool"
 	@echo ""
-	@fusesoc core show $(VLNV)
+	@echo "==============| Targets"
+	@echo ""
+	@cat $(FILE_TARGETS)
 
 .PHONY  : help
+
+#--------------------------------------------------------
+# Generate the Information file
+$(FILE_TARGETS) : $(FILE_CORE)
+#--------------------------------------------------------
+	@fusesoc core show $(VLNV) | awk '/Targets:/{flag=1; next} flag' > $(FILE_TARGETS)
 
 #--------------------------------------------------------
 # Display library list and cores list
@@ -89,20 +114,26 @@ info :
 .PHONY : info
 
 #--------------------------------------------------------
+target :
+#--------------------------------------------------------
+	fusesoc run $(FUSESOC_OPT) --target $(TARGET) --tool $(TOOL) $(VLNV)
+
+.PHONY : target
+
+#--------------------------------------------------------
 setup build run :
 #--------------------------------------------------------
-	fusesoc run --build-root $(PATH_BUILD) --$@ --target $(TARGET) --tool $(TOOL) $(VLNV)
+	fusesoc run $(FUSESOC_OPT) --$@ --target $(TARGET) --tool $(TOOL) $(VLNV)
 
 .PHONY : setup build run
 
 #--------------------------------------------------------
 % :
 #--------------------------------------------------------
-	@fusesoc run --build-root $(PATH_BUILD) --target $* $(VLNV)
+	@fusesoc run $(FUSESOC_OPT) --target $* $(VLNV)
 
 #--------------------------------------------------------
-nonreg : \
-	$(TARGETS_SIM)
+nonreg : $(TARGETS_$(NONREG))
 #--------------------------------------------------------
 # nothing
 
@@ -111,6 +142,7 @@ nonreg : \
 #--------------------------------------------------------
 clean :
 #--------------------------------------------------------
+	rm -fr $(FUSESOC_CACHE)/generator_cache
 	rm -fr $(PATH_BUILD)
 
 .PHONY : clean
