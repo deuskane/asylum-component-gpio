@@ -50,9 +50,14 @@ architecture rtl of GPIO_registers is
 
   signal   sig_busy  : std_logic;
 
-  constant INIT_data : std_logic_vector(8-1 downto 0) :=
-             "00000000" -- value
-           ;
+  function INIT_data
+    return std_logic_vector is
+    variable tmp : std_logic_vector(8-1 downto 0);
+  begin  -- function INIT_data
+    tmp(7 downto 0) := "00000000"; -- value
+    return tmp;
+  end function INIT_data;
+
   signal   data_wcs       : std_logic;
   signal   data_we        : std_logic;
   signal   data_wdata     : std_logic_vector(8-1 downto 0);
@@ -67,9 +72,14 @@ architecture rtl of GPIO_registers is
   signal   data_rdata_hw  : std_logic_vector(8-1 downto 0);
   signal   data_rbusy     : std_logic;
 
-  constant INIT_data_oe : std_logic_vector(8-1 downto 0) :=
-             DATA_OE_INIT -- value
-           ;
+  function INIT_data_oe
+    return std_logic_vector is
+    variable tmp : std_logic_vector(8-1 downto 0);
+  begin  -- function INIT_data_oe
+    tmp(7 downto 0) := DATA_OE_INIT; -- value
+    return tmp;
+  end function INIT_data_oe;
+
   signal   data_oe_wcs       : std_logic;
   signal   data_oe_we        : std_logic;
   signal   data_oe_wdata     : std_logic_vector(8-1 downto 0);
@@ -84,9 +94,14 @@ architecture rtl of GPIO_registers is
   signal   data_oe_rdata_hw  : std_logic_vector(8-1 downto 0);
   signal   data_oe_rbusy     : std_logic;
 
-  constant INIT_data_in : std_logic_vector(8-1 downto 0) :=
-             "00000000" -- value
-           ;
+  function INIT_data_in
+    return std_logic_vector is
+    variable tmp : std_logic_vector(8-1 downto 0);
+  begin  -- function INIT_data_in
+    tmp(7 downto 0) := "00000000"; -- value
+    return tmp;
+  end function INIT_data_in;
+
   signal   data_in_wcs       : std_logic;
   signal   data_in_we        : std_logic;
   signal   data_in_wdata     : std_logic_vector(8-1 downto 0);
@@ -101,9 +116,14 @@ architecture rtl of GPIO_registers is
   signal   data_in_rdata_hw  : std_logic_vector(8-1 downto 0);
   signal   data_in_rbusy     : std_logic;
 
-  constant INIT_data_out : std_logic_vector(8-1 downto 0) :=
-             "00000000" -- value
-           ;
+  function INIT_data_out
+    return std_logic_vector is
+    variable tmp : std_logic_vector(8-1 downto 0);
+  begin  -- function INIT_data_out
+    tmp(7 downto 0) := "00000000"; -- value
+    return tmp;
+  end function INIT_data_out;
+
   signal   data_out_wcs       : std_logic;
   signal   data_out_we        : std_logic;
   signal   data_out_wdata     : std_logic_vector(8-1 downto 0);
