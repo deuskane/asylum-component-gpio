@@ -2,7 +2,7 @@
     name      : "GPIO",
     width     : 8,
     desc      : "CSR for General Purpose I/O"
-    interface : "pbi"
+    interface : "sbi"
     
     parameters : [
     	{

@@ -22,9 +22,10 @@ CAPI=2:
 # 2025-05-14  1.6.0    mrosiere Delete parameters DATA_OE_FORCE,
 #                               csr use DATA_OE_INIT
 # 2025-09-05  1.6.1    mrosiere Add Package
+# 2025-11-22  1.6.2    mrosiere Use sbi instead pbi
 #-----------------------------------------------------------------------------
 
-name        : asylum:component:GPIO:1.6.1
+name        : asylum:component:GPIO:1.6.2
 description : GPIO Module
 
 #=========================================
@@ -52,13 +53,12 @@ filesets:
       - hdl/gpio_pkg.vhd
       - hdl/GPIO.vhd
       - hdl/GPIO.vhd
-      - hdl/pbi_GPIO.vhd
+      - hdl/sbi_GPIO.vhd
     file_type    : vhdlSource
     logical_name : asylum
     depend       :
       - asylum:utils:generators
       - asylum:utils:pkg
-      - asylum:component:pbi_wrapper_target
   #---------------------------------------
   sim:
   #---------------------------------------
