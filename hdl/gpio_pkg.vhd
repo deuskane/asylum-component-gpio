@@ -2,7 +2,7 @@ library IEEE;
 use     IEEE.STD_LOGIC_1164.ALL;
 use     IEEE.NUMERIC_STD.ALL;
 library asylum;
-use     asylum.pbi_pkg.all;
+use     asylum.sbi_pkg.all;
 use     asylum.GPIO_csr_pkg.all;
 
 package gpio_pkg is
@@ -66,7 +66,7 @@ component GPIO_v1 is
     );
 end component GPIO_v1;
 
-component pbi_GPIO is
+component sbi_GPIO is
   generic(
     NB_IO            : natural:=8;     -- Number of IO. Must be <= SIZE_DATA
     DATA_OE_INIT     : std_logic_vector; -- Direction of the IO after a reset
@@ -78,8 +78,8 @@ component pbi_GPIO is
     arstn_i          : in    std_logic; -- asynchronous reset
 
     -- Bus
-    pbi_ini_i        : in    pbi_ini_t;
-    pbi_tgt_o        : out   pbi_tgt_t;
+    sbi_ini_i        : in    sbi_ini_t;
+    sbi_tgt_o        : out   sbi_tgt_t;
     
     -- To/From IO
     data_i           : in    std_logic_vector (NB_IO-1     downto 0);
@@ -91,7 +91,7 @@ component pbi_GPIO is
     interrupt_ack_i  : in    std_logic
     );
 
-end component pbi_GPIO;
+end component sbi_GPIO;
 
 -- [COMPONENT_INSERT][END]
 

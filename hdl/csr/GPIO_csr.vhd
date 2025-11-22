@@ -10,7 +10,7 @@ use     asylum.GPIO_csr_pkg.ALL;
 library asylum;
 use     asylum.csr_pkg.ALL;
 library asylum;
-use     asylum.pbi_pkg.all;
+use     asylum.sbi_pkg.all;
 
 --==================================
 -- Module      : GPIO
@@ -26,8 +26,8 @@ entity GPIO_registers is
     clk_i      : in  std_logic;
     arst_b_i   : in  std_logic;
     -- Bus
-    pbi_ini_i  : in  pbi_ini_t;
-    pbi_tgt_o  : out pbi_tgt_t;
+    sbi_ini_i  : in  sbi_ini_t;
+    sbi_tgt_o  : out sbi_tgt_t;
     -- CSR
     sw2hw_o    : out GPIO_sw2hw_t;
     hw2sw_i    : in  GPIO_hw2sw_t
@@ -38,14 +38,14 @@ architecture rtl of GPIO_registers is
 
   signal   sig_wcs   : std_logic;
   signal   sig_we    : std_logic;
-  signal   sig_waddr : std_logic_vector(pbi_ini_i.addr'length-1 downto 0);
-  signal   sig_wdata : std_logic_vector(pbi_ini_i.wdata'length-1 downto 0);
+  signal   sig_waddr : std_logic_vector(sbi_ini_i.addr'length-1 downto 0);
+  signal   sig_wdata : std_logic_vector(sbi_ini_i.wdata'length-1 downto 0);
   signal   sig_wbusy : std_logic;
 
   signal   sig_rcs   : std_logic;
   signal   sig_re    : std_logic;
-  signal   sig_raddr : std_logic_vector(pbi_ini_i.addr'length-1 downto 0);
-  signal   sig_rdata : std_logic_vector(pbi_tgt_o.rdata'length-1 downto 0);
+  signal   sig_raddr : std_logic_vector(sbi_ini_i.addr'length-1 downto 0);
+  signal   sig_rdata : std_logic_vector(sbi_tgt_o.rdata'length-1 downto 0);
   signal   sig_rbusy : std_logic;
 
   signal   sig_busy  : std_logic;
@@ -141,16 +141,16 @@ architecture rtl of GPIO_registers is
 begin  -- architecture rtl
 
   -- Interface 
-  sig_wcs   <= pbi_ini_i.cs;
-  sig_we    <= pbi_ini_i.we;
-  sig_waddr <= pbi_ini_i.addr;
-  sig_wdata <= pbi_ini_i.wdata;
+  sig_wcs   <= sbi_ini_i.cs;
+  sig_we    <= sbi_ini_i.we;
+  sig_waddr <= sbi_ini_i.addr;
+  sig_wdata <= sbi_ini_i.wdata;
 
-  sig_rcs   <= pbi_ini_i.cs;
-  sig_re    <= pbi_ini_i.re;
-  sig_raddr <= pbi_ini_i.addr;
-  pbi_tgt_o.rdata <= sig_rdata;
-  pbi_tgt_o.busy <= sig_busy;
+  sig_rcs   <= sbi_ini_i.cs;
+  sig_re    <= sbi_ini_i.re;
+  sig_raddr <= sbi_ini_i.addr;
+  sbi_tgt_o.rdata <= sig_rdata;
+  sbi_tgt_o.ready <= not sig_busy;
 
   sig_busy  <= sig_wbusy when sig_we = '1' else
                sig_rbusy when sig_re = '1' else
