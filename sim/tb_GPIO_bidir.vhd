@@ -6,7 +6,7 @@
 -- Author     : mrosiere
 -- Company    : 
 -- Created    : 2017-03-25
--- Last update: 2025-09-06
+-- Last update: 2025-11-22
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ use ieee.numeric_std.all;
 --use ieee.std_logic_arith.all;
 
 library asylum;
-use     asylum.pbi_pkg.all;
+use     asylum.sbi_pkg.all;
 use     asylum.GPIO_pkg.all;
 
 entity tb_GPIO_bidir is
@@ -71,10 +71,10 @@ architecture tb of tb_GPIO_bidir is
   signal data_oe_o2       : std_logic_vector (NB_IO-1     downto 0);
   signal interrupt_o2     : std_logic;
 
-  signal pbi_ini_i        : pbi_ini_t(addr (SIZE_ADDR-1 downto 0),
+  signal sbi_ini_i        : sbi_ini_t(addr (SIZE_ADDR-1 downto 0),
                                       wdata(SIZE_DATA-1 downto 0));          
-  signal pbi_tgt_o1       : pbi_tgt_t(rdata(SIZE_DATA-1 downto 0));          
-  signal pbi_tgt_o2       : pbi_tgt_t(rdata(SIZE_DATA-1 downto 0));          
+  signal sbi_tgt_o1       : sbi_tgt_t(rdata(SIZE_DATA-1 downto 0));          
+  signal sbi_tgt_o2       : sbi_tgt_t(rdata(SIZE_DATA-1 downto 0));          
   
   -------------------------------------------------------
   -- run
@@ -135,17 +135,17 @@ begin
   ------------------------------------------------
   -- Instance of DUT
   ------------------------------------------------
-  pbi_ini_i.cs    <= cs_i   ;
-  pbi_ini_i.we    <= we_i   ;
-  pbi_ini_i.re    <= re_i   ;
-  pbi_ini_i.addr  <= addr_i ;
-  pbi_ini_i.wdata <= wdata_i;
+  sbi_ini_i.cs    <= cs_i   ;
+  sbi_ini_i.we    <= we_i   ;
+  sbi_ini_i.re    <= re_i   ;
+  sbi_ini_i.addr  <= addr_i ;
+  sbi_ini_i.wdata <= wdata_i;
 
-  rdata_o1        <= pbi_tgt_o1.rdata;
-  busy_o1         <= pbi_tgt_o1.busy ;
+  rdata_o1        <= sbi_tgt_o1.rdata;
+  busy_o1         <= not sbi_tgt_o1.ready ;
 
 
-  dut_GPIO : pbi_GPIO
+  dut_GPIO : sbi_GPIO
   generic map(
     NB_IO            => NB_IO          ,
     DATA_OE_INIT     => DATA_OE_INIT   ,
@@ -155,8 +155,8 @@ begin
     clk_i            => clk_i          ,
     cke_i            => cke_i          ,
     arstn_i          => arstn_i        ,
-    pbi_ini_i        => pbi_ini_i      , 
-    pbi_tgt_o        => pbi_tgt_o1     ,
+    sbi_ini_i        => sbi_ini_i      , 
+    sbi_tgt_o        => sbi_tgt_o1     ,
    
     data_i           => data_i         ,
     data_o           => data_o1        ,
