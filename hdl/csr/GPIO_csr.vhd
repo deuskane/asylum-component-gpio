@@ -466,4 +466,5 @@ begin  -- architecture rtl
     data_in_rdata when data_in_rcs = '1' else
     data_out_rdata when data_out_rcs = '1' else
     (others => '0'); -- Bad Address, return 0
+  sbi_tgt_o.info.name <= to_sbi_name("GPIO");
 end architecture rtl;
