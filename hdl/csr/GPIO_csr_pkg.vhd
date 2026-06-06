@@ -136,7 +136,8 @@ package GPIO_csr_pkg is
   ------------------------------------
 component GPIO_registers is
   generic (
-    DATA_OE_INIT : std_logic_vector -- Direction of the IO after a reset
+    MODULE_NAME :  string := "" -- Name of the module
+   ;DATA_OE_INIT : std_logic_vector -- Direction of the IO after a reset
   );
   port (
     -- Clock and Reset

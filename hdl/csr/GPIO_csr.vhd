@@ -19,7 +19,8 @@ use     asylum.sbi_pkg.all;
 --==================================
 entity GPIO_registers is
   generic (
-    DATA_OE_INIT : std_logic_vector -- Direction of the IO after a reset
+    MODULE_NAME :  string := "" -- Name of the module
+   ;DATA_OE_INIT : std_logic_vector -- Direction of the IO after a reset
   );
   port (
     -- Clock and Reset
@@ -466,5 +467,11 @@ begin  -- architecture rtl
     data_in_rdata when data_in_rcs = '1' else
     data_out_rdata when data_out_rcs = '1' else
     (others => '0'); -- Bad Address, return 0
-  sbi_tgt_o.info.name <= to_sbi_name("GPIO");
+
+  gen_tgt_info_name : if MODULE_NAME = ""
+  generate
+    sbi_tgt_o.info.name <= to_sbi_name("GPIO");
+  else generate
+    sbi_tgt_o.info.name <= to_sbi_name(MODULE_NAME);
+  end generate;
 end architecture rtl;

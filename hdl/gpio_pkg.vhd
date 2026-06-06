@@ -68,9 +68,10 @@ end component GPIO_v1;
 
 component sbi_GPIO is
   generic(
-    NB_IO            : natural:=8;     -- Number of IO. Must be <= SIZE_DATA
-    DATA_OE_INIT     : std_logic_vector; -- Direction of the IO after a reset
-    IT_ENABLE        : boolean:=false    -- GPIO can generate interruption
+    NAME             : string          := "";
+    NB_IO            : natural         :=8;     -- Number of IO. Must be <= SIZE_DATA
+    DATA_OE_INIT     : std_logic_vector;        -- Direction of the IO after a reset
+    IT_ENABLE        : boolean         :=false  -- GPIO can generate interruption
     );
   port   (
     clk_i            : in    std_logic;

@@ -33,9 +33,10 @@ use     asylum.GPIO_csr_pkg.all;
 
 entity sbi_GPIO is
   generic(
-    NB_IO            : natural:=8;     -- Number of IO. Must be <= SIZE_DATA
-    DATA_OE_INIT     : std_logic_vector; -- Direction of the IO after a reset
-    IT_ENABLE        : boolean:=false    -- GPIO can generate interruption
+    NAME             : string          := "";
+    NB_IO            : natural         :=8;     -- Number of IO. Must be <= SIZE_DATA
+    DATA_OE_INIT     : std_logic_vector;        -- Direction of the IO after a reset
+    IT_ENABLE        : boolean         :=false  -- GPIO can generate interruption
     );
   port   (
     clk_i            : in    std_logic;
@@ -67,6 +68,7 @@ begin  -- architecture rtl
 
   ins_csr : GPIO_registers
   generic map(
+    MODULE_NAME      => NAME,
     DATA_OE_INIT     => DATA_OE_INIT 
     )
   port map(
