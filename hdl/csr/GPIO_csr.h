@@ -60,7 +60,7 @@
 #define GPIO_DATA_OUT_VALUE_MASK 255
 
 //----------------------------------
-// Structure {module}_t
+// Structure GPIO_t
 //----------------------------------
 typedef struct {
   uint8_t data; // 0x0
