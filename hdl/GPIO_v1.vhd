@@ -6,7 +6,7 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2013-12-26
--- Last update: 2025-09-06
+-- Last update: 2026-07-20
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -42,8 +42,7 @@ entity GPIO_v1 is
     SIZE_DATA        : natural:=8;       -- Bus Data    Width
     NB_IO            : natural:=8;       -- Number of IO. Must be <= SIZE_DATA
     DATA_OE_INIT     : std_logic_vector; -- Direction of the IO after a reset
-    DATA_OE_FORCE    : std_logic_vector; -- Can change the direction of the IO
-    IT_ENABLE        : boolean:=false    -- GPIO can generate interruption
+    DATA_OE_FORCE    : std_logic_vector  -- Can change the direction of the IO
     );
   port   (
     clk_i            : in    std_logic;
@@ -62,11 +61,7 @@ entity GPIO_v1 is
     -- To/From IO
     data_i           : in    std_logic_vector (NB_IO-1     downto 0);
     data_o           : out   std_logic_vector (NB_IO-1     downto 0);
-    data_oe_o        : out   std_logic_vector (NB_IO-1     downto 0);
-    
-    -- To/From IT Ctrl
-    interrupt_o      : out   std_logic;
-    interrupt_ack_i  : in    std_logic
+    data_oe_o        : out   std_logic_vector (NB_IO-1     downto 0)
     );
 end GPIO_v1;
 
@@ -233,10 +228,4 @@ begin
     end generate;
 
 end generate gen_gpio;
-  
-
-  -----------------------------------------------------------------------------
-  -- Interrupt
-  -----------------------------------------------------------------------------
-  interrupt_o <= '0';
 end rtl;

@@ -6,7 +6,7 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2017-03-30
--- Last update: 2025-11-22
+-- Last update: 2026-07-20
 -- Platform   : 
 -- Standard   : VHDL'87
 -------------------------------------------------------------------------------
@@ -35,8 +35,7 @@ entity sbi_GPIO is
   generic(
     NAME             : string          := "";
     NB_IO            : natural         :=8;     -- Number of IO. Must be <= SIZE_DATA
-    DATA_OE_INIT     : std_logic_vector;        -- Direction of the IO after a reset
-    IT_ENABLE        : boolean         :=false  -- GPIO can generate interruption
+    DATA_OE_INIT     : std_logic_vector         -- Direction of the IO after a reset
     );
   port   (
     clk_i            : in    std_logic;
@@ -50,11 +49,7 @@ entity sbi_GPIO is
     -- To/From IO
     data_i           : in    std_logic_vector (NB_IO-1     downto 0);
     data_o           : out   std_logic_vector (NB_IO-1     downto 0);
-    data_oe_o        : out   std_logic_vector (NB_IO-1     downto 0);
-
-    -- To/From IT Ctrl
-    interrupt_o      : out   std_logic;
-    interrupt_ack_i  : in    std_logic
+    data_oe_o        : out   std_logic_vector (NB_IO-1     downto 0)
     );
 
 end entity sbi_GPIO;
@@ -82,8 +77,7 @@ begin  -- architecture rtl
 
   ins_GPIO : GPIO
   generic map(
-    NB_IO            => NB_IO          ,
-    IT_ENABLE        => IT_ENABLE    
+    NB_IO            => NB_IO
     )
   port map(
     clk_i            => clk_i          ,
@@ -92,8 +86,6 @@ begin  -- architecture rtl
     data_i           => data_i         ,
     data_o           => data_o         ,
     data_oe_o        => data_oe_o      ,
-    interrupt_o      => interrupt_o    ,
-    interrupt_ack_i  => interrupt_ack_i,
     sw2hw_i          => sw2hw          ,
     hw2sw_o          => hw2sw 
     );

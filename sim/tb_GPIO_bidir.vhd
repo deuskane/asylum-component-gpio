@@ -6,7 +6,7 @@
 -- Author     : mrosiere
 -- Company    : 
 -- Created    : 2017-03-25
--- Last update: 2025-11-22
+-- Last update: 2026-07-20
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -45,7 +45,6 @@ architecture tb of tb_GPIO_bidir is
   constant NB_IO            : natural:=8;     -- Number of IO. Must be <= SIZE_DATA
   constant DATA_OE_INIT     : std_logic_vector(NB_IO-1 downto 0):=(others=>'0'); -- Direction of the IO after a reset
   constant DATA_OE_FORCE    : std_logic_vector(NB_IO-1 downto 0):=(others=>'0'); -- Can change the direction of the IO
-  constant IT_ENABLE        : boolean:=false; -- GPIO can generate interruption
 
   -- =====[ Signals ]=============================
   signal clk_i            : std_logic := '0';
@@ -57,19 +56,16 @@ architecture tb of tb_GPIO_bidir is
   signal addr_i           : std_logic_vector (SIZE_ADDR-1 downto 0);
   signal wdata_i          : std_logic_vector (SIZE_DATA-1 downto 0);
   signal data_i           : std_logic_vector (NB_IO-1     downto 0);
-  signal interrupt_ack_i  : std_logic;
 
   signal rdata_o1         : std_logic_vector (SIZE_DATA-1 downto 0);
   signal busy_o1          : std_logic;
   signal data_o1          : std_logic_vector (NB_IO-1     downto 0);
   signal data_oe_o1       : std_logic_vector (NB_IO-1     downto 0);
-  signal interrupt_o1     : std_logic;
 
   signal rdata_o2         : std_logic_vector (SIZE_DATA-1 downto 0);
   signal busy_o2          : std_logic;
   signal data_o2          : std_logic_vector (NB_IO-1     downto 0);
   signal data_oe_o2       : std_logic_vector (NB_IO-1     downto 0);
-  signal interrupt_o2     : std_logic;
 
   signal sbi_ini_i        : sbi_ini_t(addr (SIZE_ADDR-1 downto 0),
                                       wdata(SIZE_DATA-1 downto 0));          
@@ -148,8 +144,7 @@ begin
   dut_GPIO : sbi_GPIO
   generic map(
     NB_IO            => NB_IO          ,
-    DATA_OE_INIT     => DATA_OE_INIT   ,
-    IT_ENABLE        => IT_ENABLE    
+    DATA_OE_INIT     => DATA_OE_INIT
     )
   port map(
     clk_i            => clk_i          ,
@@ -160,10 +155,7 @@ begin
    
     data_i           => data_i         ,
     data_o           => data_o1        ,
-    data_oe_o        => data_oe_o1     ,
-    
-    interrupt_o      => interrupt_o1   ,
-    interrupt_ack_i  => interrupt_ack_i
+    data_oe_o        => data_oe_o1
     );
 
   dut_GPIO_v1 : GPIO_v1
@@ -172,8 +164,7 @@ begin
     SIZE_DATA        => SIZE_DATA      ,
     NB_IO            => NB_IO          ,
     DATA_OE_INIT     => DATA_OE_INIT   ,
-    DATA_OE_FORCE    => DATA_OE_FORCE  ,
-    IT_ENABLE        => IT_ENABLE    
+    DATA_OE_FORCE    => DATA_OE_FORCE
     )
   port map(
     clk_i            => clk_i          ,
@@ -189,10 +180,7 @@ begin
 
     data_i           => data_i         ,
     data_o           => data_o2        ,
-    data_oe_o        => data_oe_o2     ,
-    
-    interrupt_o      => interrupt_o2   ,
-    interrupt_ack_i  => interrupt_ack_i
+    data_oe_o        => data_oe_o2     
     );
 
   ------------------------------------------------
@@ -223,7 +211,6 @@ begin
     we_i            <= '0';
     addr_i          <=  "00";
     wdata_i         <= X"00";
-    interrupt_ack_i <= '0';
     data_i          <= (others => 'L');
     
     run(1);
@@ -314,7 +301,6 @@ begin
       assert (busy_o1      = busy_o2     ) report "Diff busy_o     "&to_string(busy_o1     )&" - "&to_string(busy_o2     ) severity failure;
       assert (data_o1      = data_o2     ) report "Diff data_o     "&to_string(data_o1     )&" - "&to_string(data_o2     ) severity failure;
       assert (data_oe_o1   = data_oe_o2  ) report "Diff data_oe_o  "&to_string(data_oe_o1  )&" - "&to_string(data_oe_o2  ) severity failure;
-      assert (interrupt_o1 = interrupt_o2) report "Diff interrupt_o"&to_string(interrupt_o1)&" - "&to_string(interrupt_o2) severity failure;
     end if;
   end process;
   
