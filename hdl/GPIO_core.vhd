@@ -34,7 +34,7 @@ library asylum;
 use     asylum.GPIO_csr_pkg.ALL;
 use     asylum.pbi_pkg.all;
 
-entity GPIO is
+entity GPIO_core is
   generic(
     NB_IO            : natural:=8        -- Number of IO. Must be <= SIZE_DATA
     );
@@ -52,9 +52,9 @@ entity GPIO is
     hw2sw_o          : out   GPIO_hw2sw_t
 
     );
-end GPIO;
+end GPIO_core;
 
-architecture rtl of GPIO is
+architecture rtl of GPIO_core is
 
   -----------------------------------------------------------------------------
   -- Local parameters

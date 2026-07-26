@@ -63,8 +63,7 @@ filesets:
   #---------------------------------------
     files        :
       - hdl/gpio_pkg.vhd
-      - hdl/GPIO.vhd
-      - hdl/GPIO.vhd
+      - hdl/GPIO_core.vhd
       - hdl/sbi_GPIO.vhd
     file_type    : vhdlSource
     logical_name : asylum
@@ -75,7 +74,7 @@ filesets:
   sim:
   #---------------------------------------
     files:
-      - hdl/GPIO_v1.vhd : {logical_name : asylum}
+      - hdl/legacy/GPIO_v1.vhd : {logical_name : asylum}
       - sim/tb_GPIO_bidir.vhd
     file_type : vhdlSource-2008
 

@@ -7,7 +7,7 @@ use     asylum.GPIO_csr_pkg.all;
 
 package gpio_pkg is
 -- [COMPONENT_INSERT][BEGIN]
-component GPIO is
+component GPIO_core is
   generic(
     NB_IO            : natural:=8        -- Number of IO. Must be <= SIZE_DATA
     );
@@ -25,7 +25,33 @@ component GPIO is
     hw2sw_o          : out   GPIO_hw2sw_t
 
     );
-end component GPIO;
+end component GPIO_core;
+
+component sbi_GPIO is
+  generic
+    (NAME             : string          := ""
+    ;NB_IO            : natural         :=8      -- Number of IO. Must be <= SIZE_DATA
+    ;DATA_OE_INIT     : std_logic_vector         -- Direction of the IO after a reset
+    );
+  port   
+    (clk_i            : in    std_logic
+    ;cke_i            : in    std_logic
+    ;arstn_i          : in    std_logic -- asynchronous reset
+
+    -- Bus
+    ;sbi_ini_i        : in    sbi_ini_t
+    ;sbi_tgt_o        : out   sbi_tgt_t
+    
+    -- To/From IO
+    ;data_i           : in    std_logic_vector (NB_IO-1     downto 0)
+    ;data_o           : out   std_logic_vector (NB_IO-1     downto 0)
+    ;data_oe_o        : out   std_logic_vector (NB_IO-1     downto 0)
+
+    -- Interruption
+    ;it_o             : out std_logic
+    );
+
+end component sbi_GPIO;
 
 component GPIO_v1 is
   generic(
@@ -55,32 +81,6 @@ component GPIO_v1 is
     data_oe_o        : out   std_logic_vector (NB_IO-1     downto 0)
     );
 end component GPIO_v1;
-
-component sbi_GPIO is
-  generic
-    (NAME             : string          := ""
-    ;NB_IO            : natural         :=8      -- Number of IO. Must be <= SIZE_DATA
-    ;DATA_OE_INIT     : std_logic_vector         -- Direction of the IO after a reset
-    );
-  port   
-    (clk_i            : in    std_logic
-    ;cke_i            : in    std_logic
-    ;arstn_i          : in    std_logic -- asynchronous reset
-
-    -- Bus
-    ;sbi_ini_i        : in    sbi_ini_t
-    ;sbi_tgt_o        : out   sbi_tgt_t
-    
-    -- To/From IO
-    ;data_i           : in    std_logic_vector (NB_IO-1     downto 0)
-    ;data_o           : out   std_logic_vector (NB_IO-1     downto 0)
-    ;data_oe_o        : out   std_logic_vector (NB_IO-1     downto 0)
-
-    -- Interruption
-    ;it_o             : out std_logic
-    );
-
-end component sbi_GPIO;
 
 -- [COMPONENT_INSERT][END]
 

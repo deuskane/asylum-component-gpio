@@ -78,7 +78,7 @@ begin  -- architecture rtl
     hw2sw_i   => hw2sw   
   );
 
-  ins_GPIO : GPIO
+  ins_GPIO : GPIO_core
   generic map(
     NB_IO            => NB_IO
     )
