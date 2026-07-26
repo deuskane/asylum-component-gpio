@@ -44,6 +44,16 @@ generate:
       copy         : hdl/csr
       logical_name : asylum
 
+  #---------------------------------------
+  gen_csr_irq:
+  #---------------------------------------
+    generator : regtool
+    parameters:
+      file         : hdl/csr/GPIO_irq.hjson
+      name         : GPIO_irq
+      copy         : hdl/csr
+      logical_name : asylum
+
 #=========================================
 filesets:
 #=========================================
@@ -83,6 +93,7 @@ targets:
     default_tool    : ghdl
     generate        :
       - gen_csr
+      - gen_csr_irq
 
   #---------------------------------------
   sim_testcase:

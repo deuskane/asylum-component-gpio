@@ -77,7 +77,7 @@ architecture tb of tb_GPIO_bidir is
   -------------------------------------------------------
   procedure xrun
     (constant n      : in positive;           -- nb cycle
-     signal   clk_i  : in std_logic;
+     signal   clk    : in std_logic;
      constant posedge: in boolean
      ) is
     
@@ -86,9 +86,9 @@ architecture tb of tb_GPIO_bidir is
     loop
       if posedge
       then
-        wait until rising_edge(clk_i);          
+        wait until rising_edge(clk);          
       else
-        wait until falling_edge(clk_i);          
+        wait until falling_edge(clk);          
       end if;
       
     end loop;  -- i
@@ -142,46 +142,48 @@ begin
 
 
   dut_GPIO : sbi_GPIO
-  generic map(
-    NB_IO            => NB_IO          ,
-    DATA_OE_INIT     => DATA_OE_INIT
+  generic map
+   (NB_IO            => NB_IO          
+   ,DATA_OE_INIT     => DATA_OE_INIT
     )
-  port map(
-    clk_i            => clk_i          ,
-    cke_i            => cke_i          ,
-    arstn_i          => arstn_i        ,
-    sbi_ini_i        => sbi_ini_i      , 
-    sbi_tgt_o        => sbi_tgt_o1     ,
-   
-    data_i           => data_i         ,
-    data_o           => data_o1        ,
-    data_oe_o        => data_oe_o1
+  port map
+   (clk_i            => clk_i         
+   ,cke_i            => cke_i         
+   ,arstn_i          => arstn_i       
+   ,sbi_ini_i        => sbi_ini_i      
+   ,sbi_tgt_o        => sbi_tgt_o1    
+  
+   ,data_i           => data_i        
+   ,data_o           => data_o1       
+   ,data_oe_o        => data_oe_o1
+
+   ,it_o             => open
     );
 
   dut_GPIO_v1 : GPIO_v1
-  generic map(
-    SIZE_ADDR        => SIZE_ADDR      ,
-    SIZE_DATA        => SIZE_DATA      ,
-    NB_IO            => NB_IO          ,
-    DATA_OE_INIT     => DATA_OE_INIT   ,
-    DATA_OE_FORCE    => DATA_OE_FORCE
+  generic map
+   (SIZE_ADDR        => SIZE_ADDR   
+   ,SIZE_DATA        => SIZE_DATA   
+   ,NB_IO            => NB_IO       
+   ,DATA_OE_INIT     => DATA_OE_INIT
+   ,DATA_OE_FORCE    => DATA_OE_FORCE
     )
-  port map(
-    clk_i            => clk_i          ,
-    cke_i            => cke_i          ,
-    arstn_i          => arstn_i        ,
-    cs_i             => cs_i           ,
-    re_i             => re_i           ,
-    we_i             => we_i           ,
-    addr_i           => addr_i         ,
-    wdata_i          => wdata_i        ,
-    rdata_o          => rdata_o2       ,
-    busy_o           => busy_o2        ,
+  port map
+   (clk_i            => clk_i    
+   ,cke_i            => cke_i    
+   ,arstn_i          => arstn_i  
+   ,cs_i             => cs_i     
+   ,re_i             => re_i     
+   ,we_i             => we_i     
+   ,addr_i           => addr_i   
+   ,wdata_i          => wdata_i  
+   ,rdata_o          => rdata_o2 
+   ,busy_o           => busy_o2  
 
-    data_i           => data_i         ,
-    data_o           => data_o2        ,
-    data_oe_o        => data_oe_o2     
-    );
+   ,data_i           => data_i   
+   ,data_o           => data_o2  
+   ,data_oe_o        => data_oe_o2     
+   );
 
   ------------------------------------------------
   -- Clock process
@@ -257,18 +259,19 @@ begin
     cs_i            <= '0';
     we_i            <= '0';
     
-    for i in 0 to SIZE_DATA-1 loop
-    report "[TESTBENCH] Write data";
-    cs_i            <= '1';
-    addr_i          <=  "00";
-    data_i          <= (others => 'L');
-    data_i(i)       <= 'H';
-    run(1);
-    re_i            <= '1';
-
-    run(1);
-    cs_i            <= '0';
-    re_i            <= '0';
+    for i in 0 to SIZE_DATA-1 
+    loop
+      report "[TESTBENCH] Write data";
+      cs_i            <= '1';
+      addr_i          <=  "00";
+      data_i          <= (others => 'L');
+      data_i(i)       <= 'H';
+      run(1);
+      re_i            <= '1';
+  
+      run(1);
+      cs_i            <= '0';
+      re_i            <= '0';
     end loop;  -- i
     
     

@@ -1,0 +1,92 @@
+{
+    name      : "GPIO_irq",
+    width     : 8,
+    desc      : "CSR for General Purpose I/O"
+    interface : "sbi"
+    
+    parameters : [
+         {
+             name         : "DATA_OE_INIT"
+             desc         : "Direction of the IO after a reset"
+             type         : "std_logic_vector"
+         }
+    ]
+
+    registers : [
+
+        {
+            name         : "isr",
+            address      : "x0",
+            desc         : "Interruption Status Register",
+            swaccess     : "rw1c",
+            hwaccess     : "rw",
+            hwtype       : "reg",
+
+            fields: [
+                {
+                    name: "value",
+                    bits: "0",
+                    desc: "0: interrupt is inactive, 1: interrupt is active"
+                },
+            ]
+        },
+
+        {
+            name         : "imr",
+            address      : "x1",
+            desc         : "Interruption Mask Register",
+            swaccess     : "rw",
+            hwaccess     : "ro",
+            hwtype       : "reg",
+
+            fields: [
+                {
+                    name: "enable",
+                    bits: "0",
+                  init: "x0",
+                    desc: "0: interrupt is disable, 1: interrupt is enable"
+                },
+            ]
+        },
+
+        # Data_out
+        # Set
+        # Clear
+        # Toggle / Read = Data in
+        # Direction
+        # IT_CONFIG
+
+
+        {
+            name         : "data",
+            address      : "x2",
+            desc         : "data",
+            swaccess     : "rw",
+            hwaccess     : "rw",
+            hwtype       : "reg"
+            fields: [
+                {
+                    name: "value",
+                    bits: "7:0",
+                    init: "d0",
+                    desc: "Data with data_oe with mask apply"
+                },
+            ]
+        },
+        {
+            name       : "data_out",
+            address    : "x3",
+            desc       : "GPIO Output",
+            swaccess   : "rw",
+            hwaccess   : "ro",
+            fields: [
+                {
+                    name: "value",
+                    bits: "7:0",
+                    init: "d0",
+                    desc: "Output Data of GPIO"
+                },
+            ]
+        },
+    ]
+}

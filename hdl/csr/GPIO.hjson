@@ -5,22 +5,59 @@
     interface : "sbi"
     
     parameters : [
-    	{
-	    name         : "DATA_OE_INIT"
-	    desc         : "Direction of the IO after a reset"
-	    type         : "std_logic_vector"
-	}
+         {
+             name         : "DATA_OE_INIT"
+             desc         : "Direction of the IO after a reset"
+             type         : "std_logic_vector"
+         }
     ]
 
     registers : [
+
+#        {
+#            name         : "isr",
+#            address      : "x0",
+#            desc         : "Interruption Status Register",
+#            swaccess     : "rw1c",
+#            hwaccess     : "rw",
+#            hwtype       : "reg",
+#
+#            fields: [
+#                {
+#                    name: "value",
+#                    bits: "0",
+#                    desc: "0: interrupt is inactive, 1: interrupt is active"
+#                },
+#            ]
+#        },
+#
+#        {
+#            name         : "imr",
+#            address      : "x1",
+#            desc         : "Interruption Mask Register",
+#            swaccess     : "rw",
+#            hwaccess     : "ro",
+#            hwtype       : "reg",
+#
+#            fields: [
+#                {
+#                    name: "enable",
+#                    bits: "0",
+#                  init: "x0",
+#                    desc: "0: interrupt is disable, 1: interrupt is enable"
+#                },
+#            ]
+#        },
+
+
         {
             name         : "data",
             address      : "x0",
-	    alias_write  : "data_out",
+            alias_write  : "data_out",
             desc         : "data - with data_oe mask apply",
             swaccess     : "rw",
             hwaccess     : "rw",
-	    hwtype       : "ext"
+            hwtype       : "ext"
             fields: [
                 {
                     name: "value",
@@ -42,7 +79,7 @@
                     bits: "7:0",
                     init: "d0",
                     desc: "GPIO Direction : 0 input, 1 output"
-		    expr: "DATA_OE_INIT"
+                    expr: "DATA_OE_INIT"
                 },
             ]
         },
@@ -64,7 +101,7 @@
         {
             name       : "data_out",
             address    : "x3",
-	    desc       : "GPIO Output",
+            desc       : "GPIO Output",
             swaccess   : "rw",
             hwaccess   : "ro",
             fields: [
