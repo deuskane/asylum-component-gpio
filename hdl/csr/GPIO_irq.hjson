@@ -48,22 +48,12 @@
                 },
             ]
         },
-
-        # Data_out
-        # Set
-        # Clear
-        # Toggle / Read = Data in
-        # Direction
-        # IT_CONFIG
-
-
         {
             name         : "data",
             address      : "x2",
             desc         : "data",
             swaccess     : "rw",
             hwaccess     : "rw",
-            hwtype       : "reg"
             fields: [
                 {
                     name: "value",
@@ -74,9 +64,9 @@
             ]
         },
         {
-            name       : "data_out",
+            name       : "data_oe",
             address    : "x3",
-            desc       : "GPIO Output",
+            desc       : "GPIO Direction",
             swaccess   : "rw",
             hwaccess   : "ro",
             fields: [
@@ -84,7 +74,8 @@
                     name: "value",
                     bits: "7:0",
                     init: "d0",
-                    desc: "Output Data of GPIO"
+                    desc: "GPIO Direction : 0 input, 1 output"
+                    expr: "DATA_OE_INIT"
                 },
             ]
         },

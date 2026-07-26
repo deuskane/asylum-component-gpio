@@ -95,24 +95,24 @@ package GPIO_irq_csr_pkg is
   end record GPIO_irq_data_hw2sw_t;
 
   --==================================
-  -- Register    : data_out
-  -- Description : GPIO Output
+  -- Register    : data_oe
+  -- Description : GPIO Direction
   -- Address     : 0x3
   -- Width       : 8
   -- Sw Access   : rw
   -- Hw Access   : ro
   -- Hw Type     : reg
   --==================================
-  type GPIO_irq_data_out_sw2hw_t is record
+  type GPIO_irq_data_oe_sw2hw_t is record
     re : std_logic;
     we : std_logic;
   --==================================
   -- Field       : value
-  -- Description : Output Data of GPIO
+  -- Description : GPIO Direction : 0 input, 1 output
   -- Width       : 8
   --==================================
     value : std_logic_vector(8-1 downto 0);
-  end record GPIO_irq_data_out_sw2hw_t;
+  end record GPIO_irq_data_oe_sw2hw_t;
 
   ------------------------------------
   -- Structure GPIO_irq_t
@@ -121,7 +121,7 @@ package GPIO_irq_csr_pkg is
     isr : GPIO_irq_isr_sw2hw_t;
     imr : GPIO_irq_imr_sw2hw_t;
     data : GPIO_irq_data_sw2hw_t;
-    data_out : GPIO_irq_data_out_sw2hw_t;
+    data_oe : GPIO_irq_data_oe_sw2hw_t;
   end record GPIO_irq_sw2hw_t;
 
   type GPIO_irq_hw2sw_t is record

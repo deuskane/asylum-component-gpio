@@ -6,7 +6,7 @@ CSR for General Purpose I/O
 |0x0|isr|
 |0x1|imr|
 |0x2|data|
-|0x3|data_out|
+|0x3|data_oe|
 
 ## 0x0 isr
 Interruption Status Register
@@ -26,9 +26,9 @@ data
 ### [7:0] value
 Data with data_oe with mask apply
 
-## 0x3 data_out
-GPIO Output
+## 0x3 data_oe
+GPIO Direction
 
 ### [7:0] value
-Output Data of GPIO
+GPIO Direction : 0 input, 1 output
 
