@@ -27,6 +27,29 @@ component GPIO_core is
     );
 end component GPIO_core;
 
+component GPIO_irq_core is
+  generic
+   (NB_IO            : natural:=8        -- Number of IO. Must be <= SIZE_DATA
+   ;IRQ_POSEDGE      : std_logic_vector(NB_IO-1 downto 0):=(others=>'0') -- Interrupt on rising edge
+   ;IRQ_NEGEDGE      : std_logic_vector(NB_IO-1 downto 0):=(others=>'0') -- Interrupt on falling edge
+   );
+  port
+   (clk_i            : in    std_logic
+   ;cke_i            : in    std_logic
+   ;arstn_i          : in    std_logic -- asynchronous reset
+
+    -- To/From IO
+   ;data_i           : in    std_logic_vector (NB_IO-1     downto 0)
+   ;data_o           : out   std_logic_vector (NB_IO-1     downto 0)
+   ;data_oe_o        : out   std_logic_vector (NB_IO-1     downto 0)
+    
+   ;sw2hw_i          : in    GPIO_sw2hw_t
+   ;hw2sw_o          : out   GPIO_hw2sw_t
+
+   ;it_o             : out   std_logic
+    );
+end component GPIO_irq_core;
+
 component sbi_GPIO is
   generic
     (NAME             : string          := ""

@@ -64,10 +64,12 @@ filesets:
     files        :
       - hdl/gpio_pkg.vhd
       - hdl/GPIO_core.vhd
+      - hdl/GPIO_irq_core.vhd
       - hdl/sbi_GPIO.vhd
     file_type    : vhdlSource
     logical_name : asylum
     depend       :
+      - asylum:system:GIC
       - asylum:utils:generators
       - asylum:utils:pkg
   #---------------------------------------
