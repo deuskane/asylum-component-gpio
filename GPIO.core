@@ -25,6 +25,7 @@ CAPI=2:
 # 2025-11-22  1.6.2    mrosiere Use sbi instead pbi
 # 2026-06-06  1.6.3    mrosiere Add Name
 # 2026-07-20  1.7.0    mrosiere Add Interruption
+#                               Use uvvm for testbench
 #-----------------------------------------------------------------------------
 
 name        : asylum:component:GPIO:1.7.0
