@@ -72,13 +72,17 @@ filesets:
       - asylum:system:GIC
       - asylum:utils:generators
       - asylum:utils:pkg
+
   #---------------------------------------
   sim:
   #---------------------------------------
     files:
       - hdl/legacy/GPIO_v1.vhd : {logical_name : asylum}
       - sim/tb_GPIO_bidir.vhd
+      - sim/tb_GPIO.vhd
     file_type : vhdlSource-2008
+    depend       :
+      - bitvis:verification:uvvm      
 
 #=========================================
 targets:
@@ -97,10 +101,10 @@ targets:
       - gen_csr_irq
 
   #---------------------------------------
-  sim_testcase:
+  sim_testcase_vs_v1:
   #---------------------------------------
     << : *default
-    description     : Simulation of all cases
+    description     : Simulation of sb_GPIO agains GPIO_v1
     filesets_append :
       - sim
     toplevel        : tb_GPIO_bidir
@@ -108,4 +112,18 @@ targets:
     tools :
       ghdl :
         run_options : ["--vcd=dut.vcd"]
+
+  #---------------------------------------
+  sim_testcase:
+  #---------------------------------------
+    << : *default
+    description     : Simulation of all cases
+    filesets_append :
+      - sim
+    toplevel        : tb_GPIO
+    default_tool    : ghdl
+    tools :
+      ghdl :
+        analyze_options : ["-Wall","-fsynopsys","-frelaxed","--no-vital-checks"]
+        run_options     : ["--fst=dut.fst","--ieee-asserts=disable"]
 

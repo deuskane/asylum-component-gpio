@@ -30,6 +30,7 @@ use ieee.numeric_std.all;
 --use ieee.std_logic_arith.all;
 
 library asylum;
+use     asylum.string_pkg.all;
 use     asylum.sbi_pkg.all;
 use     asylum.GPIO_pkg.all;
 
@@ -102,22 +103,6 @@ architecture tb of tb_GPIO_bidir is
   begin
     xrun(n,clk_i,posedge);
   end run;
-
-  function to_string ( a: std_logic_vector) return string is
-    variable b : string (1 to a'length) := (others => NUL);
-    variable stri : integer := 1; 
-  begin
-    for i in a'range loop
-      b(stri) := std_logic'image(a((i)))(2);
-      stri := stri+1;
-    end loop;
-    return b;
-  end function;
-
-  function to_string ( a: std_logic) return string is
-  begin
-    return std_logic'image(a);
-  end function;
 
   -----------------------------------------------------
   -- Test signals
