@@ -23,6 +23,8 @@ use     bitvis_vip_gpio.gpio_bfm_pkg.all;
 
 library asylum;
 use     asylum.sbi_pkg.all;
+use     asylum.GPIO_pkg.all;
+use     asylum.GPIO_csr_pkg.all;
 
 entity tb_GPIO is
 end tb_GPIO;
@@ -58,7 +60,7 @@ begin
 
   clock_generator(clk_i, clk_ena, 20 ns, "TB Clock");
 
-  ins_dut : entity asylum.sbi_GPIO
+  ins_dut : sbi_GPIO
     generic map (
       NB_IO        => GPIO_DATA_WIDTH,
       DATA_OE_INIT => GPIO_OE_INIT
@@ -98,34 +100,36 @@ begin
     gpio_check(x"00"       , "Check GPIO output enable mask", data_oe_o, error, C_SCOPE);
 
     wait until rising_edge(clk_i);
-    sbi_check(to_unsigned(0, GPIO_ADDR_WIDTH), x"A5", "Read data"    , clk_i, sbi_if);
-    sbi_check(to_unsigned(1, GPIO_ADDR_WIDTH), x"00", "Read data_oe" , clk_i, sbi_if);
-    sbi_check(to_unsigned(2, GPIO_ADDR_WIDTH), x"A5", "Read data_in" , clk_i, sbi_if);
-    sbi_check(to_unsigned(3, GPIO_ADDR_WIDTH), x"00", "Read data_out", clk_i, sbi_if);
+    sbi_check(GPIO_DATA    , x"A5", "Read data"    , clk_i, sbi_if);
+    sbi_check(GPIO_DATA_OE , x"00", "Read data_oe" , clk_i, sbi_if);
+    sbi_check(GPIO_DATA_IN , x"A5", "Read data_in" , clk_i, sbi_if);
+    sbi_check(GPIO_DATA_OUT, x"00", "Read data_out", clk_i, sbi_if);
     
 
     log(ID_LOG_HDR, "Configure direction to output and write a value", C_SCOPE);
-    sbi_write(to_unsigned(1, GPIO_ADDR_WIDTH), x"FF", "Set GPIO direction to output", clk_i, sbi_if);
+    sbi_write(GPIO_DATA_OE , x"FF", "Set GPIO direction to output", clk_i, sbi_if);
     gpio_set  (x"A5", "Drive GPIO output value", data_i, C_SCOPE);
     gpio_check(x"00", "Check GPIO output value", data_o, error, C_SCOPE);
     gpio_check(x"FF", "Check GPIO output enable mask", data_oe_o, error, C_SCOPE);
+
     wait until rising_edge(clk_i);
-    sbi_write(to_unsigned(0, GPIO_ADDR_WIDTH), x"21", "Write output value", clk_i, sbi_if);
+    sbi_write(GPIO_DATA    , x"21", "Write output value", clk_i, sbi_if);
+    wait until rising_edge(clk_i);
     gpio_check(x"21", "Check GPIO output value", data_o, error, C_SCOPE);
-    sbi_check(to_unsigned(0, GPIO_ADDR_WIDTH), x"21", "Read data"    , clk_i, sbi_if);
-    sbi_check(to_unsigned(1, GPIO_ADDR_WIDTH), x"FF", "Read data_oe" , clk_i, sbi_if);
-    sbi_check(to_unsigned(2, GPIO_ADDR_WIDTH), x"A5", "Read data_in" , clk_i, sbi_if);
-    sbi_check(to_unsigned(3, GPIO_ADDR_WIDTH), x"21", "Read data_out", clk_i, sbi_if);
+    sbi_check(GPIO_DATA    , x"21", "Read data"    , clk_i, sbi_if);
+    sbi_check(GPIO_DATA_OE , x"FF", "Read data_oe" , clk_i, sbi_if);
+    sbi_check(GPIO_DATA_IN , x"A5", "Read data_in" , clk_i, sbi_if);
+    sbi_check(GPIO_DATA_OUT, x"21", "Read data_out", clk_i, sbi_if);
 
     log(ID_LOG_HDR, "Switch to input mode and verify input data read path", C_SCOPE);
     gpio_set(x"3C", "Drive input value via GPIO VIP", data_i, C_SCOPE);
     wait until rising_edge(clk_i);
-    sbi_write(to_unsigned(1, GPIO_ADDR_WIDTH), x"00", "Set GPIO direction to input", clk_i, sbi_if);
+    sbi_write(GPIO_DATA_OE , x"00", "Set GPIO direction to input", clk_i, sbi_if);
 
-    sbi_check(to_unsigned(0, GPIO_ADDR_WIDTH), x"3C", "Read data"    , clk_i, sbi_if);
-    sbi_check(to_unsigned(1, GPIO_ADDR_WIDTH), x"00", "Read data_oe" , clk_i, sbi_if);
-    sbi_check(to_unsigned(2, GPIO_ADDR_WIDTH), x"3C", "Read data_in" , clk_i, sbi_if);
-    sbi_check(to_unsigned(3, GPIO_ADDR_WIDTH), x"21", "Read data_out", clk_i, sbi_if);
+    sbi_check(GPIO_DATA    , x"3C", "Read data"    , clk_i, sbi_if);
+    sbi_check(GPIO_DATA_OE , x"00", "Read data_oe" , clk_i, sbi_if);
+    sbi_check(GPIO_DATA_IN , x"3C", "Read data_in" , clk_i, sbi_if);
+    sbi_check(GPIO_DATA_OUT, x"21", "Read data_out", clk_i, sbi_if);
 
     gpio_check(x"3C", "Check GPIO input value", data_i, error, C_SCOPE);
     gpio_check(x"00", "Check GPIO output enable is inactive", data_oe_o, error, C_SCOPE);

@@ -39,13 +39,13 @@ architecture rtl of GPIO_irq_registers is
 
   signal   sig_wcs   : std_logic;
   signal   sig_we    : std_logic;
-  signal   sig_waddr : std_logic_vector(sbi_ini_i.addr'length-1 downto 0);
+  signal   sig_waddr : unsigned(GPIO_irq_ADDR_WIDTH-1 downto 0);
   signal   sig_wdata : std_logic_vector(sbi_ini_i.wdata'length-1 downto 0);
   signal   sig_wbusy : std_logic;
 
   signal   sig_rcs   : std_logic;
   signal   sig_re    : std_logic;
-  signal   sig_raddr : std_logic_vector(sbi_ini_i.addr'length-1 downto 0);
+  signal   sig_raddr : unsigned(GPIO_irq_ADDR_WIDTH-1 downto 0);
   signal   sig_rdata : std_logic_vector(sbi_tgt_o.rdata'length-1 downto 0);
   signal   sig_rbusy : std_logic;
 
@@ -144,12 +144,12 @@ begin  -- architecture rtl
   -- Interface 
   sig_wcs   <= sbi_ini_i.cs;
   sig_we    <= sbi_ini_i.we;
-  sig_waddr <= sbi_ini_i.addr;
+  sig_waddr <= unsigned(sbi_ini_i.addr(GPIO_irq_ADDR_WIDTH-1 downto 0));
   sig_wdata <= sbi_ini_i.wdata;
 
   sig_rcs   <= sbi_ini_i.cs;
   sig_re    <= sbi_ini_i.re;
-  sig_raddr <= sbi_ini_i.addr;
+  sig_raddr <= unsigned(sbi_ini_i.addr(GPIO_irq_ADDR_WIDTH-1 downto 0));
   sbi_tgt_o.rdata <= sig_rdata;
   sbi_tgt_o.ready <= not sig_busy;
 
@@ -175,13 +175,13 @@ begin  -- architecture rtl
   --==================================
 
 
-    isr_rcs     <= '1' when     (sig_raddr(GPIO_irq_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(0,GPIO_irq_ADDR_WIDTH))) else '0';
+    isr_rcs     <= '1' when (sig_raddr = GPIO_irq_ISR) else '0';
     isr_re      <= sig_rcs and sig_re and isr_rcs;
     isr_rdata   <= (
       0 => isr_rdata_sw(0), -- value(0)
       others => '0');
 
-    isr_wcs     <= '1' when       (sig_waddr(GPIO_irq_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(0,GPIO_irq_ADDR_WIDTH)))   else '0';
+    isr_wcs     <= '1' when       (sig_waddr = GPIO_irq_ISR)   else '0';
     isr_we      <= sig_wcs and sig_we and isr_wcs;
     isr_wdata   <= sig_wdata;
     isr_wdata_sw(0 downto 0) <= isr_wdata(0 downto 0); -- value
@@ -242,13 +242,13 @@ begin  -- architecture rtl
   --==================================
 
 
-    imr_rcs     <= '1' when     (sig_raddr(GPIO_irq_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(1,GPIO_irq_ADDR_WIDTH))) else '0';
+    imr_rcs     <= '1' when (sig_raddr = GPIO_irq_IMR) else '0';
     imr_re      <= sig_rcs and sig_re and imr_rcs;
     imr_rdata   <= (
       0 => imr_rdata_sw(0), -- enable(0)
       others => '0');
 
-    imr_wcs     <= '1' when       (sig_waddr(GPIO_irq_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(1,GPIO_irq_ADDR_WIDTH)))   else '0';
+    imr_wcs     <= '1' when       (sig_waddr = GPIO_irq_IMR)   else '0';
     imr_we      <= sig_wcs and sig_we and imr_wcs;
     imr_wdata   <= sig_wdata;
     imr_wdata_sw(0 downto 0) <= imr_wdata(0 downto 0); -- enable
@@ -308,7 +308,7 @@ begin  -- architecture rtl
   --==================================
 
 
-    data_rcs     <= '1' when     (sig_raddr(GPIO_irq_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(2,GPIO_irq_ADDR_WIDTH))) else '0';
+    data_rcs     <= '1' when (sig_raddr = GPIO_irq_DATA) else '0';
     data_re      <= sig_rcs and sig_re and data_rcs;
     data_rdata   <= (
       0 => data_rdata_sw(0), -- value(0)
@@ -321,7 +321,7 @@ begin  -- architecture rtl
       7 => data_rdata_sw(7), -- value(7)
       others => '0');
 
-    data_wcs     <= '1' when       (sig_waddr(GPIO_irq_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(2,GPIO_irq_ADDR_WIDTH)))   else '0';
+    data_wcs     <= '1' when       (sig_waddr = GPIO_irq_DATA)   else '0';
     data_we      <= sig_wcs and sig_we and data_wcs;
     data_wdata   <= sig_wdata;
     data_wdata_sw(7 downto 0) <= data_wdata(7 downto 0); -- value
@@ -382,7 +382,7 @@ begin  -- architecture rtl
   --==================================
 
 
-    data_oe_rcs     <= '1' when     (sig_raddr(GPIO_irq_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(3,GPIO_irq_ADDR_WIDTH))) else '0';
+    data_oe_rcs     <= '1' when (sig_raddr = GPIO_irq_DATA_OE) else '0';
     data_oe_re      <= sig_rcs and sig_re and data_oe_rcs;
     data_oe_rdata   <= (
       0 => data_oe_rdata_sw(0), -- value(0)
@@ -395,7 +395,7 @@ begin  -- architecture rtl
       7 => data_oe_rdata_sw(7), -- value(7)
       others => '0');
 
-    data_oe_wcs     <= '1' when       (sig_waddr(GPIO_irq_ADDR_WIDTH-1 downto 0) = std_logic_vector(to_unsigned(3,GPIO_irq_ADDR_WIDTH)))   else '0';
+    data_oe_wcs     <= '1' when       (sig_waddr = GPIO_irq_DATA_OE)   else '0';
     data_oe_we      <= sig_wcs and sig_we and data_oe_wcs;
     data_oe_wdata   <= sig_wdata;
     data_oe_wdata_sw(7 downto 0) <= data_oe_wdata(7 downto 0); -- value
