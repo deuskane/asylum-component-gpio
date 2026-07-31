@@ -82,7 +82,7 @@ package GPIO_irq_csr_pkg is
   -- Width       : 8
   -- Sw Access   : rw
   -- Hw Access   : rw
-  -- Hw Type     : reg
+  -- Hw Type     : ext
   --==================================
   constant GPIO_irq_DATA : unsigned(GPIO_irq_ADDR_WIDTH-1 downto 0) := to_unsigned(2, GPIO_irq_ADDR_WIDTH);
 

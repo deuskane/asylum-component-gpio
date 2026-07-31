@@ -65,8 +65,9 @@ filesets:
     files        :
       - hdl/gpio_pkg.vhd
       - hdl/GPIO_core.vhd
-      - hdl/GPIO_irq_core.vhd
       - hdl/sbi_GPIO.vhd
+      - hdl/GPIO_irq_core.vhd
+      - hdl/sbi_GPIO_irq.vhd
     file_type    : vhdlSource
     logical_name : asylum
     depend       :
@@ -79,8 +80,9 @@ filesets:
   #---------------------------------------
     files:
       - hdl/legacy/GPIO_v1.vhd : {logical_name : asylum}
-      - sim/tb_GPIO_bidir.vhd
+      - sim/tb_GPIO_vs_v1.vhd
       - sim/tb_GPIO.vhd
+      - sim/tb_GPIO_irq.vhd
     file_type : vhdlSource-2008
     depend       :
       - bitvis:verification:uvvm      
@@ -105,10 +107,10 @@ targets:
   sim_testcase_vs_v1:
   #---------------------------------------
     << : *default
-    description     : Simulation of sb_GPIO agains GPIO_v1
+    description     : Simulation of sb_GPIO against GPIO_v1
     filesets_append :
       - sim
-    toplevel        : tb_GPIO_bidir
+    toplevel        : tb_GPIO_vs_v1
     default_tool    : ghdl
     tools :
       ghdl :
@@ -118,7 +120,7 @@ targets:
   sim_testcase:
   #---------------------------------------
     << : *default
-    description     : Simulation of all cases
+    description     : Simulation of sbi_GPIO with VIP
     filesets_append :
       - sim
     toplevel        : tb_GPIO
@@ -128,3 +130,16 @@ targets:
         analyze_options : ["-Wall","-fsynopsys","-frelaxed","--no-vital-checks"]
         run_options     : ["--fst=dut.fst","--ieee-asserts=disable"]
 
+  #---------------------------------------
+  sim_testcase_irq:
+  #---------------------------------------
+    << : *default
+    description     : Simulation of sbi_GPIO_irq with VIP
+    filesets_append :
+      - sim
+    toplevel        : tb_GPIO_irq
+    default_tool    : ghdl
+    tools :
+      ghdl :
+        analyze_options : ["-Wall","-fsynopsys","-frelaxed","--no-vital-checks"]
+        run_options     : ["--fst=dut.fst","--ieee-asserts=disable"]

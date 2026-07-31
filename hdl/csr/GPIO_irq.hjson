@@ -54,6 +54,8 @@
             desc         : "data",
             swaccess     : "rw",
             hwaccess     : "rw",
+            hwtype       : "ext",
+
             fields: [
                 {
                     name: "value",

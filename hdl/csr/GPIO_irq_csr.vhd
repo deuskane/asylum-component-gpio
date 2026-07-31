@@ -299,7 +299,7 @@ begin  -- architecture rtl
   -- Width       : 8
   -- Sw Access   : rw
   -- Hw Access   : rw
-  -- Hw Type     : reg
+  -- Hw Type     : ext
   --==================================
   --==================================
   -- Field       : value
@@ -328,11 +328,9 @@ begin  -- architecture rtl
     data_wdata_hw(7 downto 0) <= hw2sw_i.data.value; -- value
     sw2hw_o.data.value <= data_rdata_hw(7 downto 0); -- value
 
-    ins_data : csr_reg
+    ins_data : csr_ext
       generic map
         (WIDTH         => 8
-        ,INIT          => INIT_data
-        ,MODEL         => "rw"
         )
       port map
         (clk_i         => clk_i

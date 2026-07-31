@@ -1,8 +1,8 @@
 -------------------------------------------------------------------------------
--- Title      : tb_GPIO_bidir
+-- Title      : tb_GPIO_vs_v1
 -- Project    : GPIO
 -------------------------------------------------------------------------------
--- File       : tb_GPIO_bidir.vhd
+-- File       : tb_GPIO_vs_v1.vhd
 -- Author     : mrosiere
 -- Company    : 
 -- Created    : 2017-03-25
@@ -34,11 +34,11 @@ use     asylum.string_pkg.all;
 use     asylum.sbi_pkg.all;
 use     asylum.GPIO_pkg.all;
 
-entity tb_GPIO_bidir is
+entity tb_GPIO_vs_v1 is
 
-end tb_GPIO_bidir;
+end tb_GPIO_vs_v1;
 
-architecture tb of tb_GPIO_bidir is
+architecture tb of tb_GPIO_vs_v1 is
 
   -- =====[ Constants ]===========================
   constant SIZE_ADDR        : natural:=2;     -- Bus Address Width

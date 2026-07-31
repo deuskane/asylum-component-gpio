@@ -24,14 +24,14 @@ library IEEE;
 use     IEEE.STD_LOGIC_1164.ALL;
 use     IEEE.numeric_std.ALL;
 library asylum;
-use     asylum.GPIO_csr_pkg.ALL;
 use     asylum.GIC_pkg.all;
+use     asylum.GPIO_irq_csr_pkg.ALL;
 
 entity GPIO_irq_core is
   generic
    (NB_IO            : natural:=8        -- Number of IO. Must be <= SIZE_DATA
-   ;IRQ_POSEDGE      : std_logic_vector(NB_IO-1 downto 0):=(others=>'0') -- Interrupt on rising edge
-   ;IRQ_NEGEDGE      : std_logic_vector(NB_IO-1 downto 0):=(others=>'0') -- Interrupt on falling edge
+   ;IRQ_POSEDGE      : std_logic_vector  -- Interrupt on rising edge
+   ;IRQ_NEGEDGE      : std_logic_vector  -- Interrupt on falling edge
    );
   port
    (clk_i            : in    std_logic
@@ -43,8 +43,8 @@ entity GPIO_irq_core is
    ;data_o           : out   std_logic_vector (NB_IO-1     downto 0)
    ;data_oe_o        : out   std_logic_vector (NB_IO-1     downto 0)
     
-   ;sw2hw_i          : in    GPIO_sw2hw_t
-   ;hw2sw_o          : out   GPIO_hw2sw_t
+   ;sw2hw_i          : in    GPIO_irq_sw2hw_t
+   ;hw2sw_o          : out   GPIO_irq_hw2sw_t
 
    ;it_o             : out   std_logic
     );
@@ -65,27 +65,59 @@ architecture rtl of GPIO_irq_core is
 
   signal gic_it          : std_logic_vector (CSR_DATA_WIDTH-1 downto 0);
 
+  signal data_in_r       : std_logic_vector (CSR_DATA_WIDTH-1 downto 0);
+  signal data_out_r      : std_logic_vector (NB_IO         -1 downto 0);
+  signal data_out        : std_logic_vector (CSR_DATA_WIDTH-1 downto 0);
 begin
 
   -----------------------------------------------------------------------------
   -- Data I/O
   -----------------------------------------------------------------------------
   -- transfer the input data to the internal signal with the same width as the CSR data width
-  data_in               <= std_logic_vector(resize(unsigned(data_i), CSR_DATA_WIDTH));
+  data_in               <= std_logic_vector(resize(unsigned(data_i    ), CSR_DATA_WIDTH));
+  data_out              <= std_logic_vector(resize(unsigned(data_out_r), CSR_DATA_WIDTH));
 
-  data_o                <= sw2hw_i.data   .value(data_o   'range);
+  data_o                <= data_out_r;
   data_oe_o             <= sw2hw_i.data_oe.value(data_oe_o'range);
 
-  hw2sw_o.data.value    <= ((sw2hw_i.data   .value and     sw2hw_i.data_oe .value) or
-                            (        data_in       and not sw2hw_i.data_oe .value));
+  hw2sw_o.data.value    <= ((data_out and     sw2hw_i.data_oe .value) or
+                            (data_in  and not sw2hw_i.data_oe .value));
   hw2sw_o.data.we       <= '1';
 
-  data_in_posedge       <=     data_in and not sw2hw_i.data.value; -- Rising  edge detection
-  data_in_negedge       <= not data_in and     sw2hw_i.data.value; -- Falling edge detection
+  -----------------------------------------------------------------------------
+  -- Data output register
+  -----------------------------------------------------------------------------
+  process(clk_i, arstn_i)
+  begin
+    if arstn_i = '0' 
+    then
+      data_out_r <= (others => '0');
+    elsif rising_edge(clk_i)
+    then
+      if (sw2hw_i.data.we = '1') 
+      then
+        data_out_r <= sw2hw_i.data.value(data_out_r'range);
+      end if;
+    end if;
+  end process;
+
+  -----------------------------------------------------------------------------
+  -- Data input register
+  -----------------------------------------------------------------------------
+  process(clk_i)
+  begin
+    if rising_edge(clk_i)
+    then
+      data_in_r <= data_in;
+    end if;
+  end process;
 
   ---------------------------------------------
   -- Interruption
   ---------------------------------------------
+  data_in_posedge       <=     data_in and not data_in_r; -- Rising  edge detection
+  data_in_negedge       <= not data_in and     data_in_r; -- Falling edge detection
+
   gic_it                <= ((data_in_posedge and IRQ_POSEDGE) or 
                             (data_in_negedge and IRQ_NEGEDGE));
 
