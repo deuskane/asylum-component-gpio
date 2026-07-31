@@ -1,5 +1,5 @@
 {
-    name      : "GPIO",
+    name      : "GPIO_irq",
     width     : 8,
     desc      : "CSR for General Purpose I/O"
     interface : "sbi"
@@ -15,13 +15,47 @@
     registers : [
 
         {
-            name         : "data",
+            name         : "isr",
             address      : "x0",
-            alias_write  : "data_out",
-            desc         : "data - with data_oe mask apply",
+            desc         : "Interruption Status Register",
+            swaccess     : "rw1c",
+            hwaccess     : "rw",
+            hwtype       : "reg",
+
+            fields: [
+                {
+                    name: "value",
+                    bits: "7:0",
+                    desc: "0: interrupt is inactive, 1: interrupt is active"
+                },
+            ]
+        },
+
+        {
+            name         : "imr",
+            address      : "x1",
+            desc         : "Interruption Mask Register",
+            swaccess     : "rw",
+            hwaccess     : "ro",
+            hwtype       : "reg",
+
+            fields: [
+                {
+                    name: "enable",
+                    bits: "7:0",
+                    init: "x0",
+                    desc: "0: interrupt is disable, 1: interrupt is enable"
+                },
+            ]
+        },
+        {
+            name         : "data",
+            address      : "x2",
+            desc         : "data",
             swaccess     : "rw",
             hwaccess     : "rw",
-            hwtype       : "ext"
+            hwtype       : "ext",
+
             fields: [
                 {
                     name: "value",
@@ -33,7 +67,7 @@
         },
         {
             name       : "data_oe",
-            address    : "x1",
+            address    : "x3",
             desc       : "GPIO Direction",
             swaccess   : "rw",
             hwaccess   : "ro",
@@ -44,36 +78,6 @@
                     init: "d0",
                     desc: "GPIO Direction : 0 input, 1 output"
                     expr: "DATA_OE_INIT"
-                },
-            ]
-        },
-        {
-            name       : "data_in",
-            address    : "x2",
-            desc       : "GPIO Input",
-            swaccess   : "ro",
-            hwaccess   : "rw",
-            fields: [
-                {
-                    name: "value",
-                    bits: "7:0",
-                    init: "d0",
-                    desc: "Input Data of GPIO"
-                },
-            ]
-        },
-        {
-            name       : "data_out",
-            address    : "x3",
-            desc       : "GPIO Output",
-            swaccess   : "rw",
-            hwaccess   : "ro",
-            fields: [
-                {
-                    name: "value",
-                    bits: "7:0",
-                    init: "d0",
-                    desc: "Output Data of GPIO"
                 },
             ]
         },

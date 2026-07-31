@@ -1,12 +1,12 @@
 -------------------------------------------------------------------------------
--- Title      : tb_GPIO_bidir
+-- Title      : tb_GPIO_vs_v1
 -- Project    : GPIO
 -------------------------------------------------------------------------------
--- File       : tb_GPIO_bidir.vhd
+-- File       : tb_GPIO_vs_v1.vhd
 -- Author     : mrosiere
 -- Company    : 
 -- Created    : 2017-03-25
--- Last update: 2025-11-22
+-- Last update: 2026-07-20
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -30,14 +30,15 @@ use ieee.numeric_std.all;
 --use ieee.std_logic_arith.all;
 
 library asylum;
+use     asylum.string_pkg.all;
 use     asylum.sbi_pkg.all;
 use     asylum.GPIO_pkg.all;
 
-entity tb_GPIO_bidir is
+entity tb_GPIO_vs_v1 is
 
-end tb_GPIO_bidir;
+end tb_GPIO_vs_v1;
 
-architecture tb of tb_GPIO_bidir is
+architecture tb of tb_GPIO_vs_v1 is
 
   -- =====[ Constants ]===========================
   constant SIZE_ADDR        : natural:=2;     -- Bus Address Width
@@ -45,7 +46,6 @@ architecture tb of tb_GPIO_bidir is
   constant NB_IO            : natural:=8;     -- Number of IO. Must be <= SIZE_DATA
   constant DATA_OE_INIT     : std_logic_vector(NB_IO-1 downto 0):=(others=>'0'); -- Direction of the IO after a reset
   constant DATA_OE_FORCE    : std_logic_vector(NB_IO-1 downto 0):=(others=>'0'); -- Can change the direction of the IO
-  constant IT_ENABLE        : boolean:=false; -- GPIO can generate interruption
 
   -- =====[ Signals ]=============================
   signal clk_i            : std_logic := '0';
@@ -57,19 +57,16 @@ architecture tb of tb_GPIO_bidir is
   signal addr_i           : std_logic_vector (SIZE_ADDR-1 downto 0);
   signal wdata_i          : std_logic_vector (SIZE_DATA-1 downto 0);
   signal data_i           : std_logic_vector (NB_IO-1     downto 0);
-  signal interrupt_ack_i  : std_logic;
 
   signal rdata_o1         : std_logic_vector (SIZE_DATA-1 downto 0);
   signal busy_o1          : std_logic;
   signal data_o1          : std_logic_vector (NB_IO-1     downto 0);
   signal data_oe_o1       : std_logic_vector (NB_IO-1     downto 0);
-  signal interrupt_o1     : std_logic;
 
   signal rdata_o2         : std_logic_vector (SIZE_DATA-1 downto 0);
   signal busy_o2          : std_logic;
   signal data_o2          : std_logic_vector (NB_IO-1     downto 0);
   signal data_oe_o2       : std_logic_vector (NB_IO-1     downto 0);
-  signal interrupt_o2     : std_logic;
 
   signal sbi_ini_i        : sbi_ini_t(addr (SIZE_ADDR-1 downto 0),
                                       wdata(SIZE_DATA-1 downto 0));          
@@ -81,7 +78,7 @@ architecture tb of tb_GPIO_bidir is
   -------------------------------------------------------
   procedure xrun
     (constant n      : in positive;           -- nb cycle
-     signal   clk_i  : in std_logic;
+     signal   clk    : in std_logic;
      constant posedge: in boolean
      ) is
     
@@ -90,9 +87,9 @@ architecture tb of tb_GPIO_bidir is
     loop
       if posedge
       then
-        wait until rising_edge(clk_i);          
+        wait until rising_edge(clk);          
       else
-        wait until falling_edge(clk_i);          
+        wait until falling_edge(clk);          
       end if;
       
     end loop;  -- i
@@ -106,22 +103,6 @@ architecture tb of tb_GPIO_bidir is
   begin
     xrun(n,clk_i,posedge);
   end run;
-
-  function to_string ( a: std_logic_vector) return string is
-    variable b : string (1 to a'length) := (others => NUL);
-    variable stri : integer := 1; 
-  begin
-    for i in a'range loop
-      b(stri) := std_logic'image(a((i)))(2);
-      stri := stri+1;
-    end loop;
-    return b;
-  end function;
-
-  function to_string ( a: std_logic) return string is
-  begin
-    return std_logic'image(a);
-  end function;
 
   -----------------------------------------------------
   -- Test signals
@@ -146,54 +127,48 @@ begin
 
 
   dut_GPIO : sbi_GPIO
-  generic map(
-    NB_IO            => NB_IO          ,
-    DATA_OE_INIT     => DATA_OE_INIT   ,
-    IT_ENABLE        => IT_ENABLE    
+  generic map
+   (NB_IO            => NB_IO          
+   ,DATA_OE_INIT     => DATA_OE_INIT
     )
-  port map(
-    clk_i            => clk_i          ,
-    cke_i            => cke_i          ,
-    arstn_i          => arstn_i        ,
-    sbi_ini_i        => sbi_ini_i      , 
-    sbi_tgt_o        => sbi_tgt_o1     ,
-   
-    data_i           => data_i         ,
-    data_o           => data_o1        ,
-    data_oe_o        => data_oe_o1     ,
-    
-    interrupt_o      => interrupt_o1   ,
-    interrupt_ack_i  => interrupt_ack_i
+  port map
+   (clk_i            => clk_i         
+   ,cke_i            => cke_i         
+   ,arstn_i          => arstn_i       
+   ,sbi_ini_i        => sbi_ini_i      
+   ,sbi_tgt_o        => sbi_tgt_o1    
+  
+   ,data_i           => data_i        
+   ,data_o           => data_o1       
+   ,data_oe_o        => data_oe_o1
+
+   ,it_o             => open
     );
 
   dut_GPIO_v1 : GPIO_v1
-  generic map(
-    SIZE_ADDR        => SIZE_ADDR      ,
-    SIZE_DATA        => SIZE_DATA      ,
-    NB_IO            => NB_IO          ,
-    DATA_OE_INIT     => DATA_OE_INIT   ,
-    DATA_OE_FORCE    => DATA_OE_FORCE  ,
-    IT_ENABLE        => IT_ENABLE    
+  generic map
+   (SIZE_ADDR        => SIZE_ADDR   
+   ,SIZE_DATA        => SIZE_DATA   
+   ,NB_IO            => NB_IO       
+   ,DATA_OE_INIT     => DATA_OE_INIT
+   ,DATA_OE_FORCE    => DATA_OE_FORCE
     )
-  port map(
-    clk_i            => clk_i          ,
-    cke_i            => cke_i          ,
-    arstn_i          => arstn_i        ,
-    cs_i             => cs_i           ,
-    re_i             => re_i           ,
-    we_i             => we_i           ,
-    addr_i           => addr_i         ,
-    wdata_i          => wdata_i        ,
-    rdata_o          => rdata_o2       ,
-    busy_o           => busy_o2        ,
+  port map
+   (clk_i            => clk_i    
+   ,cke_i            => cke_i    
+   ,arstn_i          => arstn_i  
+   ,cs_i             => cs_i     
+   ,re_i             => re_i     
+   ,we_i             => we_i     
+   ,addr_i           => addr_i   
+   ,wdata_i          => wdata_i  
+   ,rdata_o          => rdata_o2 
+   ,busy_o           => busy_o2  
 
-    data_i           => data_i         ,
-    data_o           => data_o2        ,
-    data_oe_o        => data_oe_o2     ,
-    
-    interrupt_o      => interrupt_o2   ,
-    interrupt_ack_i  => interrupt_ack_i
-    );
+   ,data_i           => data_i   
+   ,data_o           => data_o2  
+   ,data_oe_o        => data_oe_o2     
+   );
 
   ------------------------------------------------
   -- Clock process
@@ -223,7 +198,6 @@ begin
     we_i            <= '0';
     addr_i          <=  "00";
     wdata_i         <= X"00";
-    interrupt_ack_i <= '0';
     data_i          <= (others => 'L');
     
     run(1);
@@ -270,18 +244,19 @@ begin
     cs_i            <= '0';
     we_i            <= '0';
     
-    for i in 0 to SIZE_DATA-1 loop
-    report "[TESTBENCH] Write data";
-    cs_i            <= '1';
-    addr_i          <=  "00";
-    data_i          <= (others => 'L');
-    data_i(i)       <= 'H';
-    run(1);
-    re_i            <= '1';
-
-    run(1);
-    cs_i            <= '0';
-    re_i            <= '0';
+    for i in 0 to SIZE_DATA-1 
+    loop
+      report "[TESTBENCH] Write data";
+      cs_i            <= '1';
+      addr_i          <=  "00";
+      data_i          <= (others => 'L');
+      data_i(i)       <= 'H';
+      run(1);
+      re_i            <= '1';
+  
+      run(1);
+      cs_i            <= '0';
+      re_i            <= '0';
     end loop;  -- i
     
     
@@ -314,7 +289,6 @@ begin
       assert (busy_o1      = busy_o2     ) report "Diff busy_o     "&to_string(busy_o1     )&" - "&to_string(busy_o2     ) severity failure;
       assert (data_o1      = data_o2     ) report "Diff data_o     "&to_string(data_o1     )&" - "&to_string(data_o2     ) severity failure;
       assert (data_oe_o1   = data_oe_o2  ) report "Diff data_oe_o  "&to_string(data_oe_o1  )&" - "&to_string(data_oe_o2  ) severity failure;
-      assert (interrupt_o1 = interrupt_o2) report "Diff interrupt_o"&to_string(interrupt_o1)&" - "&to_string(interrupt_o2) severity failure;
     end if;
   end process;
   

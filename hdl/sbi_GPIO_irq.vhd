@@ -1,8 +1,8 @@
 -------------------------------------------------------------------------------
--- Title      : sbi_GPIO
+-- Title      : sbi_GPIO_irq
 -- Project    : PicoSOC
 -------------------------------------------------------------------------------
--- File       : sbi_GPIO.vhd
+-- File       : sbi_GPIO_irq.vhd
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2017-03-30
@@ -16,12 +16,7 @@
 -------------------------------------------------------------------------------
 -- Revisions  :
 -- Date        Version  Author  Description
--- 2017-03-30  0.1      mrosiere Created
--- 2025-03-05  0.2      mrosiere use csr from regtool
--- 2025-05-14  0.3      mrosiere Delete parameters DATA_OE_FORCE,
---                               csr use DATA_OE_INIT
--- 2025-11-22  1.0      mrosiere Use sbi instead pbi
--- 2026-07-31  1.1      mrosiere Update instantiation name
+-- 2026-07-31  1.0      mrosiere Created
 -------------------------------------------------------------------------------
 
 library IEEE;
@@ -30,13 +25,16 @@ use     IEEE.numeric_std.ALL;
 library asylum;
 use     asylum.sbi_pkg.all;
 use     asylum.GPIO_pkg.all;
-use     asylum.GPIO_csr_pkg.all;
+use     asylum.GPIO_irq_csr_pkg.all;
 
-entity sbi_GPIO is
+entity sbi_GPIO_irq is
   generic
     (NAME             : string          := ""
     ;NB_IO            : natural         :=8      -- Number of IO. Must be <= SIZE_DATA
     ;DATA_OE_INIT     : std_logic_vector         -- Direction of the IO after a reset
+    ;IRQ_POSEDGE      : std_logic_vector         -- Interrupt on rising edge
+    ;IRQ_NEGEDGE      : std_logic_vector         -- Interrupt on falling edge
+
     );
   port   
     (clk_i            : in    std_logic
@@ -56,16 +54,16 @@ entity sbi_GPIO is
     ;it_o             : out std_logic
     );
 
-end entity sbi_GPIO;
+end entity sbi_GPIO_irq;
 
-architecture rtl of sbi_GPIO is
+architecture rtl of sbi_GPIO_irq is
 
-  signal sw2hw                  : GPIO_sw2hw_t;
-  signal hw2sw                  : GPIO_hw2sw_t;
+  signal sw2hw                  : GPIO_irq_sw2hw_t;
+  signal hw2sw                  : GPIO_irq_hw2sw_t;
 
 begin  -- architecture rtl
 
-  ins_csr : GPIO_registers
+  ins_csr : GPIO_irq_registers
   generic map
   ( MODULE_NAME  => NAME
    ,DATA_OE_INIT => DATA_OE_INIT 
@@ -79,9 +77,12 @@ begin  -- architecture rtl
    ,hw2sw_i      => hw2sw   
   );
 
-  ins_GPIO_core : GPIO_core
+  ins_GPIO_irq_core : GPIO_irq_core
   generic map
   ( NB_IO        => NB_IO
+   ,IRQ_POSEDGE  => IRQ_POSEDGE
+   ,IRQ_NEGEDGE  => IRQ_NEGEDGE
+
   )
   port map
   ( clk_i        => clk_i    
@@ -91,9 +92,8 @@ begin  -- architecture rtl
    ,data_o       => data_o   
    ,data_oe_o    => data_oe_o
    ,sw2hw_i      => sw2hw    
-   ,hw2sw_o      => hw2sw 
+   ,hw2sw_o      => hw2sw
+   ,it_o         => it_o
     );
-
-  it_o <= '0';
   
 end architecture rtl;

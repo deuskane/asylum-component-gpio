@@ -24,9 +24,11 @@ CAPI=2:
 # 2025-09-05  1.6.1    mrosiere Add Package
 # 2025-11-22  1.6.2    mrosiere Use sbi instead pbi
 # 2026-06-06  1.6.3    mrosiere Add Name
+# 2026-07-20  1.7.0    mrosiere Add Interruption
+#                               Use uvvm for testbench
 #-----------------------------------------------------------------------------
 
-name        : asylum:component:GPIO:1.6.3
+name        : asylum:component:GPIO:1.7.0
 description : GPIO Module
 
 #=========================================
@@ -43,6 +45,16 @@ generate:
       copy         : hdl/csr
       logical_name : asylum
 
+  #---------------------------------------
+  gen_csr_irq:
+  #---------------------------------------
+    generator : regtool
+    parameters:
+      file         : hdl/csr/GPIO_irq.hjson
+      name         : GPIO_irq
+      copy         : hdl/csr
+      logical_name : asylum
+
 #=========================================
 filesets:
 #=========================================
@@ -52,21 +64,28 @@ filesets:
   #---------------------------------------
     files        :
       - hdl/gpio_pkg.vhd
-      - hdl/GPIO.vhd
-      - hdl/GPIO.vhd
+      - hdl/GPIO_core.vhd
       - hdl/sbi_GPIO.vhd
+      - hdl/GPIO_irq_core.vhd
+      - hdl/sbi_GPIO_irq.vhd
     file_type    : vhdlSource
     logical_name : asylum
     depend       :
+      - asylum:system:GIC
       - asylum:utils:generators
       - asylum:utils:pkg
+
   #---------------------------------------
   sim:
   #---------------------------------------
     files:
-      - hdl/GPIO_v1.vhd : {logical_name : asylum}
-      - sim/tb_GPIO_bidir.vhd
+      - hdl/legacy/GPIO_v1.vhd : {logical_name : asylum}
+      - sim/tb_GPIO_vs_v1.vhd
+      - sim/tb_GPIO.vhd
+      - sim/tb_GPIO_irq.vhd
     file_type : vhdlSource-2008
+    depend       :
+      - bitvis:verification:uvvm      
 
 #=========================================
 targets:
@@ -82,17 +101,45 @@ targets:
     default_tool    : ghdl
     generate        :
       - gen_csr
+      - gen_csr_irq
 
   #---------------------------------------
-  sim_testcase:
+  sim_testcase_vs_v1:
   #---------------------------------------
     << : *default
-    description     : Simulation of all cases
+    description     : Simulation of sb_GPIO against GPIO_v1
     filesets_append :
       - sim
-    toplevel        : tb_GPIO_bidir
+    toplevel        : tb_GPIO_vs_v1
     default_tool    : ghdl
     tools :
       ghdl :
         run_options : ["--vcd=dut.vcd"]
 
+  #---------------------------------------
+  sim_testcase:
+  #---------------------------------------
+    << : *default
+    description     : Simulation of sbi_GPIO with VIP
+    filesets_append :
+      - sim
+    toplevel        : tb_GPIO
+    default_tool    : ghdl
+    tools :
+      ghdl :
+        analyze_options : ["-Wall","-fsynopsys","-frelaxed","--no-vital-checks"]
+        run_options     : ["--fst=dut.fst","--ieee-asserts=disable"]
+
+  #---------------------------------------
+  sim_testcase_irq:
+  #---------------------------------------
+    << : *default
+    description     : Simulation of sbi_GPIO_irq with VIP
+    filesets_append :
+      - sim
+    toplevel        : tb_GPIO_irq
+    default_tool    : ghdl
+    tools :
+      ghdl :
+        analyze_options : ["-Wall","-fsynopsys","-frelaxed","--no-vital-checks"]
+        run_options     : ["--fst=dut.fst","--ieee-asserts=disable"]

@@ -6,7 +6,7 @@
 -- Author     : Mathieu Rosiere
 -- Company    : 
 -- Created    : 2013-12-26
--- Last update: 2025-09-06
+-- Last update: 2026-07-20
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -34,10 +34,9 @@ library asylum;
 use     asylum.GPIO_csr_pkg.ALL;
 use     asylum.pbi_pkg.all;
 
-entity GPIO is
+entity GPIO_core is
   generic(
-    NB_IO            : natural:=8;       -- Number of IO. Must be <= SIZE_DATA
-    IT_ENABLE        : boolean:=false    -- GPIO can generate interruption
+    NB_IO            : natural:=8        -- Number of IO. Must be <= SIZE_DATA
     );
   port   (
     clk_i            : in    std_logic;
@@ -49,17 +48,13 @@ entity GPIO is
     data_o           : out   std_logic_vector (NB_IO-1     downto 0);
     data_oe_o        : out   std_logic_vector (NB_IO-1     downto 0);
     
-    -- To/From IT Ctrl
-    interrupt_o      : out   std_logic;
-    interrupt_ack_i  : in    std_logic;
-
     sw2hw_i          : in    GPIO_sw2hw_t;
     hw2sw_o          : out   GPIO_hw2sw_t
 
     );
-end GPIO;
+end GPIO_core;
 
-architecture rtl of GPIO is
+architecture rtl of GPIO_core is
 
   -----------------------------------------------------------------------------
   -- Local parameters
@@ -95,9 +90,4 @@ begin
   -----------------------------------------------------------------------------
   -- IP Output
   -----------------------------------------------------------------------------
-
-  -----------------------------------------------------------------------------
-  -- Interrupt
-  -----------------------------------------------------------------------------
-  interrupt_o <= '0';
 end rtl;
