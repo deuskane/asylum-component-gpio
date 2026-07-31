@@ -53,46 +53,46 @@ architecture rtl of GPIO_irq_registers is
 
   function INIT_isr
     return std_logic_vector is
-    variable tmp : std_logic_vector(1-1 downto 0);
+    variable tmp : std_logic_vector(8-1 downto 0);
   begin  -- function INIT_isr
-    tmp(0 downto 0) := "0"; -- value
+    tmp(7 downto 0) := "00000000"; -- value
     return tmp;
   end function INIT_isr;
 
   signal   isr_wcs       : std_logic;
   signal   isr_we        : std_logic;
   signal   isr_wdata     : std_logic_vector(8-1 downto 0);
-  signal   isr_wdata_sw  : std_logic_vector(1-1 downto 0);
-  signal   isr_wdata_hw  : std_logic_vector(1-1 downto 0);
+  signal   isr_wdata_sw  : std_logic_vector(8-1 downto 0);
+  signal   isr_wdata_hw  : std_logic_vector(8-1 downto 0);
   signal   isr_wbusy     : std_logic;
 
   signal   isr_rcs       : std_logic;
   signal   isr_re        : std_logic;
   signal   isr_rdata     : std_logic_vector(8-1 downto 0);
-  signal   isr_rdata_sw  : std_logic_vector(1-1 downto 0);
-  signal   isr_rdata_hw  : std_logic_vector(1-1 downto 0);
+  signal   isr_rdata_sw  : std_logic_vector(8-1 downto 0);
+  signal   isr_rdata_hw  : std_logic_vector(8-1 downto 0);
   signal   isr_rbusy     : std_logic;
 
   function INIT_imr
     return std_logic_vector is
-    variable tmp : std_logic_vector(1-1 downto 0);
+    variable tmp : std_logic_vector(8-1 downto 0);
   begin  -- function INIT_imr
-    tmp(0 downto 0) := "0"; -- enable
+    tmp(7 downto 0) := "00000000"; -- enable
     return tmp;
   end function INIT_imr;
 
   signal   imr_wcs       : std_logic;
   signal   imr_we        : std_logic;
   signal   imr_wdata     : std_logic_vector(8-1 downto 0);
-  signal   imr_wdata_sw  : std_logic_vector(1-1 downto 0);
-  signal   imr_wdata_hw  : std_logic_vector(1-1 downto 0);
+  signal   imr_wdata_sw  : std_logic_vector(8-1 downto 0);
+  signal   imr_wdata_hw  : std_logic_vector(8-1 downto 0);
   signal   imr_wbusy     : std_logic;
 
   signal   imr_rcs       : std_logic;
   signal   imr_re        : std_logic;
   signal   imr_rdata     : std_logic_vector(8-1 downto 0);
-  signal   imr_rdata_sw  : std_logic_vector(1-1 downto 0);
-  signal   imr_rdata_hw  : std_logic_vector(1-1 downto 0);
+  signal   imr_rdata_sw  : std_logic_vector(8-1 downto 0);
+  signal   imr_rdata_hw  : std_logic_vector(8-1 downto 0);
   signal   imr_rbusy     : std_logic;
 
   function INIT_data
@@ -163,7 +163,7 @@ begin  -- architecture rtl
   -- Register    : isr
   -- Description : Interruption Status Register
   -- Address     : 0x0
-  -- Width       : 1
+  -- Width       : 8
   -- Sw Access   : rw1c
   -- Hw Access   : rw
   -- Hw Type     : reg
@@ -171,7 +171,7 @@ begin  -- architecture rtl
   --==================================
   -- Field       : value
   -- Description : 0: interrupt is inactive, 1: interrupt is active
-  -- Width       : 1
+  -- Width       : 8
   --==================================
 
 
@@ -179,18 +179,25 @@ begin  -- architecture rtl
     isr_re      <= sig_rcs and sig_re and isr_rcs;
     isr_rdata   <= (
       0 => isr_rdata_sw(0), -- value(0)
+      1 => isr_rdata_sw(1), -- value(1)
+      2 => isr_rdata_sw(2), -- value(2)
+      3 => isr_rdata_sw(3), -- value(3)
+      4 => isr_rdata_sw(4), -- value(4)
+      5 => isr_rdata_sw(5), -- value(5)
+      6 => isr_rdata_sw(6), -- value(6)
+      7 => isr_rdata_sw(7), -- value(7)
       others => '0');
 
     isr_wcs     <= '1' when       (sig_waddr = GPIO_irq_ISR)   else '0';
     isr_we      <= sig_wcs and sig_we and isr_wcs;
     isr_wdata   <= sig_wdata;
-    isr_wdata_sw(0 downto 0) <= isr_wdata(0 downto 0); -- value
-    isr_wdata_hw(0 downto 0) <= hw2sw_i.isr.value; -- value
-    sw2hw_o.isr.value <= isr_rdata_hw(0 downto 0); -- value
+    isr_wdata_sw(7 downto 0) <= isr_wdata(7 downto 0); -- value
+    isr_wdata_hw(7 downto 0) <= hw2sw_i.isr.value; -- value
+    sw2hw_o.isr.value <= isr_rdata_hw(7 downto 0); -- value
 
     ins_isr : csr_reg
       generic map
-        (WIDTH         => 1
+        (WIDTH         => 8
         ,INIT          => INIT_isr
         ,MODEL         => "rw1c"
         )
@@ -219,7 +226,7 @@ begin  -- architecture rtl
     isr_rdata   <= (others => '0');
     isr_wcs      <= '0';
     isr_wbusy    <= '0';
-    sw2hw_o.isr.value <= "0";
+    sw2hw_o.isr.value <= "00000000";
     sw2hw_o.isr.re <= '0';
     sw2hw_o.isr.we <= '0';
   end generate gen_isr_b;
@@ -230,7 +237,7 @@ begin  -- architecture rtl
   -- Register    : imr
   -- Description : Interruption Mask Register
   -- Address     : 0x1
-  -- Width       : 1
+  -- Width       : 8
   -- Sw Access   : rw
   -- Hw Access   : ro
   -- Hw Type     : reg
@@ -238,7 +245,7 @@ begin  -- architecture rtl
   --==================================
   -- Field       : enable
   -- Description : 0: interrupt is disable, 1: interrupt is enable
-  -- Width       : 1
+  -- Width       : 8
   --==================================
 
 
@@ -246,17 +253,24 @@ begin  -- architecture rtl
     imr_re      <= sig_rcs and sig_re and imr_rcs;
     imr_rdata   <= (
       0 => imr_rdata_sw(0), -- enable(0)
+      1 => imr_rdata_sw(1), -- enable(1)
+      2 => imr_rdata_sw(2), -- enable(2)
+      3 => imr_rdata_sw(3), -- enable(3)
+      4 => imr_rdata_sw(4), -- enable(4)
+      5 => imr_rdata_sw(5), -- enable(5)
+      6 => imr_rdata_sw(6), -- enable(6)
+      7 => imr_rdata_sw(7), -- enable(7)
       others => '0');
 
     imr_wcs     <= '1' when       (sig_waddr = GPIO_irq_IMR)   else '0';
     imr_we      <= sig_wcs and sig_we and imr_wcs;
     imr_wdata   <= sig_wdata;
-    imr_wdata_sw(0 downto 0) <= imr_wdata(0 downto 0); -- enable
-    sw2hw_o.imr.enable <= imr_rdata_hw(0 downto 0); -- enable
+    imr_wdata_sw(7 downto 0) <= imr_wdata(7 downto 0); -- enable
+    sw2hw_o.imr.enable <= imr_rdata_hw(7 downto 0); -- enable
 
     ins_imr : csr_reg
       generic map
-        (WIDTH         => 1
+        (WIDTH         => 8
         ,INIT          => INIT_imr
         ,MODEL         => "rw"
         )
@@ -285,7 +299,7 @@ begin  -- architecture rtl
     imr_rdata   <= (others => '0');
     imr_wcs      <= '0';
     imr_wbusy    <= '0';
-    sw2hw_o.imr.enable <= "0";
+    sw2hw_o.imr.enable <= "00000000";
     sw2hw_o.imr.re <= '0';
     sw2hw_o.imr.we <= '0';
   end generate gen_imr_b;

@@ -92,9 +92,8 @@ begin  -- architecture rtl
    ,data_o       => data_o   
    ,data_oe_o    => data_oe_o
    ,sw2hw_i      => sw2hw    
-   ,hw2sw_o      => hw2sw 
+   ,hw2sw_o      => hw2sw
+   ,it_o         => it_o
     );
-
-  it_o <= '0';
   
 end architecture rtl;

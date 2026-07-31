@@ -16,9 +16,9 @@
 
 // Field       : isr.value
 // Description : 0: interrupt is inactive, 1: interrupt is active
-// Range       : [0]
+// Range       : [7:0]
 #define GPIO_IRQ_ISR_VALUE      0
-#define GPIO_IRQ_ISR_VALUE_MASK 1
+#define GPIO_IRQ_ISR_VALUE_MASK 255
 
 //==================================
 // Register    : imr
@@ -29,9 +29,9 @@
 
 // Field       : imr.enable
 // Description : 0: interrupt is disable, 1: interrupt is enable
-// Range       : [0]
+// Range       : [7:0]
 #define GPIO_IRQ_IMR_ENABLE      0
-#define GPIO_IRQ_IMR_ENABLE_MASK 1
+#define GPIO_IRQ_IMR_ENABLE_MASK 255
 
 //==================================
 // Register    : data

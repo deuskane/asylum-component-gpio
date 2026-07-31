@@ -25,7 +25,7 @@ package GPIO_irq_csr_pkg is
   -- Register    : isr
   -- Description : Interruption Status Register
   -- Address     : 0x0
-  -- Width       : 1
+  -- Width       : 8
   -- Sw Access   : rw1c
   -- Hw Access   : rw
   -- Hw Type     : reg
@@ -38,9 +38,9 @@ package GPIO_irq_csr_pkg is
   --==================================
   -- Field       : value
   -- Description : 0: interrupt is inactive, 1: interrupt is active
-  -- Width       : 1
+  -- Width       : 8
   --==================================
-    value : std_logic_vector(1-1 downto 0);
+    value : std_logic_vector(8-1 downto 0);
   end record GPIO_irq_isr_sw2hw_t;
 
   type GPIO_irq_isr_hw2sw_t is record
@@ -48,16 +48,16 @@ package GPIO_irq_csr_pkg is
   --==================================
   -- Field       : value
   -- Description : 0: interrupt is inactive, 1: interrupt is active
-  -- Width       : 1
+  -- Width       : 8
   --==================================
-    value : std_logic_vector(1-1 downto 0);
+    value : std_logic_vector(8-1 downto 0);
   end record GPIO_irq_isr_hw2sw_t;
 
   --==================================
   -- Register    : imr
   -- Description : Interruption Mask Register
   -- Address     : 0x1
-  -- Width       : 1
+  -- Width       : 8
   -- Sw Access   : rw
   -- Hw Access   : ro
   -- Hw Type     : reg
@@ -70,9 +70,9 @@ package GPIO_irq_csr_pkg is
   --==================================
   -- Field       : enable
   -- Description : 0: interrupt is disable, 1: interrupt is enable
-  -- Width       : 1
+  -- Width       : 8
   --==================================
-    enable : std_logic_vector(1-1 downto 0);
+    enable : std_logic_vector(8-1 downto 0);
   end record GPIO_irq_imr_sw2hw_t;
 
   --==================================
