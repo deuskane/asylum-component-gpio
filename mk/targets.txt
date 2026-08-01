@@ -1,4 +1,5 @@
 default            : Default Target
-sim_testcase       : Simulation of all cases
-sim_testcase_vs_v1 : Simulation of sb_GPIO agains GPIO_v1
+sim_testcase       : Simulation of sbi_GPIO with VIP
+sim_testcase_irq   : Simulation of sbi_GPIO_irq with VIP
+sim_testcase_vs_v1 : Simulation of sb_GPIO against GPIO_v1
 
