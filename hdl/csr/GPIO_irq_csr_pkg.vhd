@@ -18,8 +18,8 @@ package GPIO_irq_csr_pkg is
   -- Global Constants
   ------------------------------------
 
-  constant GPIO_irq_ADDR_WIDTH : natural := 2;
-  constant GPIO_irq_DATA_WIDTH : natural := 8;
+  constant GPIO_IRQ_ADDR_WIDTH : natural := 2;
+  constant GPIO_IRQ_DATA_WIDTH : natural := 8;
 
   --==================================
   -- Register    : isr
@@ -30,7 +30,7 @@ package GPIO_irq_csr_pkg is
   -- Hw Access   : rw
   -- Hw Type     : reg
   --==================================
-  constant GPIO_irq_ISR : unsigned(GPIO_irq_ADDR_WIDTH-1 downto 0) := to_unsigned(0, GPIO_irq_ADDR_WIDTH);
+  constant GPIO_IRQ_ISR : unsigned(GPIO_IRQ_ADDR_WIDTH-1 downto 0) := to_unsigned(0, GPIO_IRQ_ADDR_WIDTH);
 
   type GPIO_irq_isr_sw2hw_t is record
     re : std_logic;
@@ -62,7 +62,7 @@ package GPIO_irq_csr_pkg is
   -- Hw Access   : ro
   -- Hw Type     : reg
   --==================================
-  constant GPIO_irq_IMR : unsigned(GPIO_irq_ADDR_WIDTH-1 downto 0) := to_unsigned(1, GPIO_irq_ADDR_WIDTH);
+  constant GPIO_IRQ_IMR : unsigned(GPIO_IRQ_ADDR_WIDTH-1 downto 0) := to_unsigned(1, GPIO_IRQ_ADDR_WIDTH);
 
   type GPIO_irq_imr_sw2hw_t is record
     re : std_logic;
@@ -84,7 +84,7 @@ package GPIO_irq_csr_pkg is
   -- Hw Access   : rw
   -- Hw Type     : ext
   --==================================
-  constant GPIO_irq_DATA : unsigned(GPIO_irq_ADDR_WIDTH-1 downto 0) := to_unsigned(2, GPIO_irq_ADDR_WIDTH);
+  constant GPIO_IRQ_DATA : unsigned(GPIO_IRQ_ADDR_WIDTH-1 downto 0) := to_unsigned(2, GPIO_IRQ_ADDR_WIDTH);
 
   type GPIO_irq_data_sw2hw_t is record
     re : std_logic;
@@ -116,7 +116,7 @@ package GPIO_irq_csr_pkg is
   -- Hw Access   : ro
   -- Hw Type     : reg
   --==================================
-  constant GPIO_irq_DATA_OE : unsigned(GPIO_irq_ADDR_WIDTH-1 downto 0) := to_unsigned(3, GPIO_irq_ADDR_WIDTH);
+  constant GPIO_IRQ_DATA_OE : unsigned(GPIO_IRQ_ADDR_WIDTH-1 downto 0) := to_unsigned(3, GPIO_IRQ_ADDR_WIDTH);
 
   type GPIO_irq_data_oe_sw2hw_t is record
     re : std_logic;

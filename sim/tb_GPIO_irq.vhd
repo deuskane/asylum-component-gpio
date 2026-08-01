@@ -1,11 +1,11 @@
 -------------------------------------------------------------------------------
--- Title      : tb_GPIO_irq
+-- Title      : tb_GPIO_IRQ
 -- Project    : GPIO
 -------------------------------------------------------------------------------
--- File       : tb_GPIO_irq.vhd
+-- File       : tb_GPIO_IRQ.vhd
 -- Author     : Mathieu Rosière
 -------------------------------------------------------------------------------
--- Description: UVVM/SBI testbench for the SBI GPIO_irq DUT
+-- Description: UVVM/SBI testbench for the SBI GPIO_IRQ DUT
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 -- Revisions  :
@@ -28,14 +28,14 @@ use     bitvis_vip_gpio.gpio_bfm_pkg.all;
 library asylum;
 use     asylum.sbi_pkg.all;
 use     asylum.GPIO_pkg.all;
-use     asylum.GPIO_irq_csr_pkg.all;
+use     asylum.GPIO_IRQ_csr_pkg.all;
 
-entity tb_GPIO_irq is
-end tb_GPIO_irq;
+entity tb_GPIO_IRQ is
+end tb_GPIO_IRQ;
 
-architecture sim of tb_GPIO_irq is
+architecture sim of tb_GPIO_IRQ is
 
-  constant C_SCOPE         : string := "TB_GPIO_irq";
+  constant C_SCOPE         : string := "TB_GPIO_IRQ";
   constant NB_IO           : natural := 4;
   constant GPIO_ADDR_WIDTH : natural := 2;
   constant GPIO_DATA_WIDTH : natural := 8;
@@ -67,7 +67,7 @@ begin
 
   clock_generator(clk_i, clk_ena, 20 ns, "TB Clock");
 
-  ins_dut : sbi_GPIO_irq
+  ins_dut : sbi_GPIO_IRQ
     generic map (
       NB_IO        => NB_IO
      ,DATA_OE_INIT => GPIO_OE_INIT
@@ -111,35 +111,35 @@ begin
     gpio_check(x"0"       , "Check GPIO output enable mask", data_oe_o, error, C_SCOPE);
 
     wait until rising_edge(clk_i);
-    sbi_check(GPIO_irq_DATA    , x"05", "Read data"    , clk_i, sbi_if);
-    sbi_check(GPIO_irq_DATA_OE , x"00", "Read data_oe" , clk_i, sbi_if);
+    sbi_check(GPIO_IRQ_DATA    , x"05", "Read data"    , clk_i, sbi_if);
+    sbi_check(GPIO_IRQ_DATA_OE , x"00", "Read data_oe" , clk_i, sbi_if);
     
 
     ------------------------------------------------
     log(ID_LOG_HDR, "Configure direction to output and write a value", C_SCOPE);
     ------------------------------------------------
 
-    sbi_write(GPIO_irq_DATA_OE , x"0F", "Set GPIO direction to output", clk_i, sbi_if);
+    sbi_write(GPIO_IRQ_DATA_OE , x"0F", "Set GPIO direction to output", clk_i, sbi_if);
     gpio_set  (x"5", "Drive GPIO output value", data_i, C_SCOPE);
     gpio_check(x"0", "Check GPIO output value", data_o, error, C_SCOPE);
     gpio_check(x"F", "Check GPIO output enable mask", data_oe_o, error, C_SCOPE);
 
     wait until rising_edge(clk_i);
-    sbi_write(GPIO_irq_DATA    , x"01", "Write output value", clk_i, sbi_if);
+    sbi_write(GPIO_IRQ_DATA    , x"01", "Write output value", clk_i, sbi_if);
     wait until rising_edge(clk_i);
     gpio_check(x"1", "Check GPIO output value", data_o, error, C_SCOPE);
-    sbi_check(GPIO_irq_DATA    , x"01", "Read data"    , clk_i, sbi_if);
-    sbi_check(GPIO_irq_DATA_OE , x"0F", "Read data_oe" , clk_i, sbi_if);
+    sbi_check(GPIO_IRQ_DATA    , x"01", "Read data"    , clk_i, sbi_if);
+    sbi_check(GPIO_IRQ_DATA_OE , x"0F", "Read data_oe" , clk_i, sbi_if);
 
     ------------------------------------------------
     log(ID_LOG_HDR, "Switch to input mode and verify input data read path", C_SCOPE);
     ------------------------------------------------
     gpio_set(x"C", "Drive input value via GPIO VIP", data_i, C_SCOPE);
     wait until rising_edge(clk_i);
-    sbi_write(GPIO_irq_DATA_OE , x"00", "Set GPIO direction to input", clk_i, sbi_if);
+    sbi_write(GPIO_IRQ_DATA_OE , x"00", "Set GPIO direction to input", clk_i, sbi_if);
 
-    sbi_check(GPIO_irq_DATA    , x"0C", "Read data"    , clk_i, sbi_if);
-    sbi_check(GPIO_irq_DATA_OE , x"00", "Read data_oe" , clk_i, sbi_if);
+    sbi_check(GPIO_IRQ_DATA    , x"0C", "Read data"    , clk_i, sbi_if);
+    sbi_check(GPIO_IRQ_DATA_OE , x"00", "Read data_oe" , clk_i, sbi_if);
 
     gpio_check(x"C", "Check GPIO input value", data_i, error, C_SCOPE);
     gpio_check(x"0", "Check GPIO output enable is inactive", data_oe_o, error, C_SCOPE);
@@ -147,8 +147,8 @@ begin
     ------------------------------------------------
     log(ID_LOG_HDR, "Test posedge interrupt detection GPIO[0]", C_SCOPE);
     ------------------------------------------------
-    sbi_write(GPIO_irq_IMR, x"01", "Enable GPIO interrupt", clk_i, sbi_if);
-    sbi_check(GPIO_irq_IMR, x"01", "Read IMR", clk_i, sbi_if);
+    sbi_write(GPIO_IRQ_IMR, x"01", "Enable GPIO interrupt", clk_i, sbi_if);
+    sbi_check(GPIO_IRQ_IMR, x"01", "Read IMR", clk_i, sbi_if);
 
     gpio_set(x"0", "Clear GPIO input", data_i, C_SCOPE);
     wait until rising_edge(clk_i);
@@ -156,13 +156,13 @@ begin
     wait until rising_edge(clk_i);
 
     check_value(it_o, '0', ERROR, "Check posedge interrupt output");
-    sbi_check(GPIO_irq_ISR, x"00", "Check posedge ISR", clk_i, sbi_if);
+    sbi_check(GPIO_IRQ_ISR, x"00", "Check posedge ISR", clk_i, sbi_if);
 
     ------------------------------------------------
     log(ID_LOG_HDR, "Test posedge interrupt detection GPIO[1]", C_SCOPE);
     ------------------------------------------------
-    sbi_write(GPIO_irq_IMR, x"02", "Enable GPIO interrupt", clk_i, sbi_if);
-    sbi_check(GPIO_irq_IMR, x"02", "Read IMR", clk_i, sbi_if);
+    sbi_write(GPIO_IRQ_IMR, x"02", "Enable GPIO interrupt", clk_i, sbi_if);
+    sbi_check(GPIO_IRQ_IMR, x"02", "Read IMR", clk_i, sbi_if);
 
     gpio_set(x"0", "Clear GPIO input", data_i, C_SCOPE);
     wait until rising_edge(clk_i);
@@ -171,10 +171,10 @@ begin
     wait until rising_edge(clk_i);
 
     check_value(it_o, '1', ERROR, "Check posedge interrupt output");
-    sbi_check(GPIO_irq_ISR, x"02", "Check posedge ISR", clk_i, sbi_if);
+    sbi_check(GPIO_IRQ_ISR, x"02", "Check posedge ISR", clk_i, sbi_if);
 
-    sbi_write(GPIO_irq_ISR, x"02", "Clear ISR after posedge", clk_i, sbi_if);
-    sbi_check(GPIO_irq_ISR, x"00", "Check posedge ISR cleared", clk_i, sbi_if);
+    sbi_write(GPIO_IRQ_ISR, x"02", "Clear ISR after posedge", clk_i, sbi_if);
+    sbi_check(GPIO_IRQ_ISR, x"00", "Check posedge ISR cleared", clk_i, sbi_if);
     check_value(it_o, '0', ERROR, "Check interrupt output cleared after ISR clear");
 
     ------------------------------------------------
@@ -183,18 +183,18 @@ begin
     gpio_set(x"4", "Drive high level on bit 2", data_i, C_SCOPE);
     wait until rising_edge(clk_i);
 
-    sbi_write(GPIO_irq_IMR, x"04", "Enable GPIO interrupt", clk_i, sbi_if);
-    sbi_check(GPIO_irq_IMR, x"04", "Read IMR", clk_i, sbi_if);
+    sbi_write(GPIO_IRQ_IMR, x"04", "Enable GPIO interrupt", clk_i, sbi_if);
+    sbi_check(GPIO_IRQ_IMR, x"04", "Read IMR", clk_i, sbi_if);
 
     gpio_set(x"0", "Clear GPIO input", data_i, C_SCOPE);
     wait until rising_edge(clk_i);
     wait until rising_edge(clk_i);
 
     check_value(it_o, '1', ERROR, "Check posedge interrupt output");
-    sbi_check(GPIO_irq_ISR, x"04", "Check posedge ISR", clk_i, sbi_if);
+    sbi_check(GPIO_IRQ_ISR, x"04", "Check posedge ISR", clk_i, sbi_if);
 
-    sbi_write(GPIO_irq_ISR, x"04", "Clear ISR after posedge", clk_i, sbi_if);
-    sbi_check(GPIO_irq_ISR, x"00", "Check posedge ISR cleared", clk_i, sbi_if);
+    sbi_write(GPIO_IRQ_ISR, x"04", "Clear ISR after posedge", clk_i, sbi_if);
+    sbi_check(GPIO_IRQ_ISR, x"00", "Check posedge ISR cleared", clk_i, sbi_if);
     check_value(it_o, '0', ERROR, "Check interrupt output cleared after ISR clear");
 
     report "[TB_GPIO] All SBI GPIO checks passed";
