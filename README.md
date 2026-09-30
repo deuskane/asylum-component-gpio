@@ -1,3 +1,5 @@
+[![CI](https://github.com/deuskane/asylum-component-gpio/actions/workflows/ci.yml/badge.svg)](https://github.com/deuskane/asylum-component-gpio/actions/workflows/ci.yml)
+
 # GPIO Component
 
 ## Table of Contents
