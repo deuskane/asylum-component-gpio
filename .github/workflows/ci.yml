@@ -7,8 +7,20 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  nonreg-sim:
-    # Call the workflow from CI repo
+#<GENERATE_BEGIN>
+  sim_testcase:
     uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
     with:
-      nonreg_type: sim
+      name: sim_testcase
+
+  sim_testcase_irq:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_testcase_irq
+
+  sim_testcase_vs_v1:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_testcase_vs_v1
+
+#<GENERATE_END>
