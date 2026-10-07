@@ -1,353 +1,395 @@
+<!--
+  README GENERATION INSTRUCTIONS (for the next regeneration run)
+  ----------------------------------------------------------------
+  This README follows the common Asylum IP model. Regenerate it from the
+  sources, never from the previous README text alone.
+
+  Sources of truth (in priority order):
+    1. hdl/*.vhd            : entities, generics, ports, packages
+    2. hdl/csr/*.hjson      : register map (regtool); *_csr.md/.h are generated
+    3. <IP>.core            : VLNV (name), filesets, targets, depends, revisions
+    4. mk/targets.txt       : target list shown by `make help`; mk/defs.mk
+    5. sim/, syn/, esw/, boards/ : testbenches, constraints, software
+  Section order (keep it, same headings in every IP):
+    CI badge / Title + one-line description + VLNV / Table of Contents /
+    Introduction (Key Features) / Block Diagram / Top-Level (Parameters,
+    Ports, Instantiation Example) / HDL Modules / Register Map /
+    Verification / Synthesis / Design Notes (optional) /
+    Directory Structure / Dependencies
+  Rules:
+    - Language: English. Tables: Parameters = Name|Type|Default|Description,
+      Ports = Name|Direction|Type|Description (grouped by interface).
+    - Register Map: link to the generated hdl/csr/<X>_csr.md (plus the
+      .hjson source and _csr.h header); never copy register tables here.
+    - Top-Level = sbi_* wrapper if present, else the entity used by the
+      `default` target, else the main entity (libraries: list packages).
+    - Write "This IP has no software-visible registers." / "No dedicated
+      synthesis target ..." instead of removing a section.
+    - Keep still-accurate hand-written content (ISA tables, results,
+      images) in "Design Notes"; drop anything not backed by the sources.
+    - Block diagram: doc/<NAME>.drawio (NAME = 4th field of the VLNV),
+      top entity box with generics on top, inputs left, outputs right,
+      bus interfaces as bold arrows, internal blocks colour-coded
+      (CSR yellow, FIFO/memory green, core logic blue, external grey).
+      Update it whenever ports/generics/sub-blocks change.
+    - Do not edit generated files (hdl/csr/*_csr.*) or the CI badge URL.
+-->
 [![CI](https://github.com/deuskane/asylum-component-gpio/actions/workflows/ci.yml/badge.svg)](https://github.com/deuskane/asylum-component-gpio/actions/workflows/ci.yml)
 
-# GPIO Component
+# asylum-component-gpio
+
+**General purpose I/O with per-pin direction control and CSR access over the SBI bus, with an optional edge-interrupt variant.**
+
+VLNV: `asylum:component:GPIO:1.7.1`
 
 ## Table of Contents
 
-- [Introduction](#introduction)
-- [HDL Modules](#hdl-modules)
-  - [GPIO](#gpio)
-  - [GPIO_v1](#gpio_v1)
-  - [sbi_GPIO](#sbi_gpio)
-- [Register Map (CSR)](#register-map-csr)
-- [Verification](#verification)
+1. [Introduction](#introduction)
+2. [Block Diagram](#block-diagram)
+3. [Top-Level](#top-level)
+4. [HDL Modules](#hdl-modules)
+5. [Register Map](#register-map)
+6. [Verification](#verification)
+7. [Synthesis](#synthesis)
+8. [Design Notes](#design-notes)
+9. [Directory Structure](#directory-structure)
+10. [Dependencies](#dependencies)
 
 ## Introduction
 
-This repository contains the GPIO (General Purpose Input/Output) component as part of the Asylum project. The GPIO component provides a flexible and configurable interface for managing general-purpose digital I/O pins with support for:
+This IP provides up to 8 general purpose I/O lines per instance. Each line has an output value, an output enable (direction) and an input value, all accessible through a small CSR bank on the SBI bus. Two bus wrappers are available:
 
-- Configurable number of I/O pins (up to 8 or more)
-- Programmable input/output direction per pin
-- Register-based control and status via CSR (Control and Status Registers)
-- Optional interrupt generation capability
-- Support for multiple bus interfaces (PBI legacy, SBI modern)
+- **`sbi_GPIO`**: GPIO only (`GPIO_registers` + `GPIO_core`), registers `data`, `data_oe`, `data_in`, `data_out`; its `it_o` output is tied to `'0'`.
+- **`sbi_GPIO_irq`**: same pins and ports, plus rising / falling edge interrupts selected per line by generics (`GPIO_irq_registers` + `GPIO_irq_core` + `GIC_core`), registers `isr`, `imr`, `data`, `data_oe`.
 
-The component is designed to be integrated into larger digital systems and provides both a low-level GPIO core with CSR integration (`GPIO` with `GPIO_registers`) and a bus-integrated wrapper (`sbi_GPIO`).
+The legacy implementation `GPIO_v1` (direct `cs/re/we` bus) is kept in `hdl/legacy/` as reference model for a comparison testbench.
 
-### Project Structure
+### Key Features
 
+- 1 to 8 I/O lines (`NB_IO`), output data, output enable and input data per line
+- Direction after reset set by the `DATA_OE_INIT` generic
+- `data` register read returns the output value for output lines and the input value for input lines
+- Output enable vector provided for tri-state / IO-buffer connection
+- `sbi_GPIO_irq`: per-line rising (`IRQ_POSEDGE`) and falling (`IRQ_NEGEDGE`) edge detection, interrupt status (rw1c) and mask registers, merged interrupt `it_o`
+- Register-compatible with the legacy `GPIO_v1` (checked by `tb_GPIO_vs_v1`)
+
+## Block Diagram
+
+Diagram: [doc/GPIO.drawio](doc/GPIO.drawio) (open with diagrams.net or the VS Code Draw.io extension). It shows `sbi_GPIO`; `sbi_GPIO_irq` has the same ports with `GPIO_irq_registers`, `GPIO_irq_core` and a `GIC_core`.
+
+- The SBI bus accesses `GPIO_registers` (generated by regtool from [hdl/csr/GPIO.hjson](hdl/csr/GPIO.hjson)).
+- `GPIO_core` drives `data_o` / `data_oe_o` directly from the `data_out` / `data_oe` registers.
+- `data_i` is written every cycle into the `data_in` register (hardware-written CSR).
+- `GPIO_core` computes the read value of `data` as `(data_out and data_oe) or (data_in and not data_oe)`.
+- Writes to `data` are aliased to `data_out` inside the CSR block.
+
+## Top-Level
+
+Top-level entity: **`sbi_GPIO`** ([hdl/sbi_GPIO.vhd](hdl/sbi_GPIO.vhd)), library `asylum`, component declared in `asylum.gpio_pkg`. The interrupt variant `sbi_GPIO_irq` is described in [HDL Modules](#hdl-modules).
+
+### Parameters
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `NAME` | string | `""` | Instance name, forwarded to the CSR block (`MODULE_NAME`, visible in `sbi_tgt_o.info`) |
+| `NB_IO` | natural | `8` | Number of I/O lines; must be <= 8 (CSR data width) |
+| `DATA_OE_INIT` | std_logic_vector | *(none)* | Reset value of `data_oe` (0: input, 1: output); must be 8 bits wide (copied into the 8-bit CSR field) |
+
+### Ports
+
+#### Clock & Reset
+
+| Name | Direction | Type | Description |
+|------|-----------|------|-------------|
+| `clk_i` | in | std_logic | System clock |
+| `cke_i` | in | std_logic | Clock enable (not used by `GPIO_core`) |
+| `arstn_i` | in | std_logic | Asynchronous reset, active low |
+
+#### Bus (SBI)
+
+| Name | Direction | Type | Description |
+|------|-----------|------|-------------|
+| `sbi_ini_i` | in | sbi_ini_t | SBI request from the initiator (`cs`, `re`, `we`, `addr`, `wdata`) |
+| `sbi_tgt_o` | out | sbi_tgt_t | SBI response to the initiator (`ready`, `rdata`, `info`) |
+
+#### GPIO
+
+| Name | Direction | Type | Description |
+|------|-----------|------|-------------|
+| `data_i` | in | std_logic_vector(NB_IO-1 downto 0) | Input values of the lines |
+| `data_o` | out | std_logic_vector(NB_IO-1 downto 0) | Output values (`data_out` register) |
+| `data_oe_o` | out | std_logic_vector(NB_IO-1 downto 0) | Output enables, 1 = output (`data_oe` register) |
+
+#### Interrupts
+
+| Name | Direction | Type | Description |
+|------|-----------|------|-------------|
+| `it_o` | out | std_logic | Always `'0'` in `sbi_GPIO` (use `sbi_GPIO_irq` for interrupts) |
+
+### Instantiation Example
+
+```vhdl
+library asylum;
+use     asylum.sbi_pkg.all;
+use     asylum.gpio_pkg.all;
+
+  ins_gpio : entity asylum.sbi_GPIO
+    generic map
+    ( NAME         => "GPIO0"
+     ,NB_IO        => 8
+     ,DATA_OE_INIT => x"0F"               -- lines 3..0 are outputs after reset
+    )
+    port map
+    ( clk_i     => clk
+     ,cke_i     => '1'
+     ,arstn_i   => arst_b
+     ,sbi_ini_i => sbi_inis(GPIO0_ID)     -- sbi_ini_t(addr(1 downto 0), wdata(7 downto 0))
+     ,sbi_tgt_o => sbi_tgts(GPIO0_ID)     -- sbi_tgt_t(rdata(7 downto 0))
+     ,data_i    => gpio_i
+     ,data_o    => gpio_o
+     ,data_oe_o => gpio_oe
+     ,it_o      => open
+    );
 ```
-hdl/                   # Hardware Description Language files
-├── GPIO.vhd           # Main GPIO core module (CSR-based)
-├── GPIO_v1.vhd        # Legacy GPIO implementation (PBI-based)
-├── sbi_GPIO.vhd       # SBI bus interface wrapper
-├── gpio_pkg.vhd       # Component package definitions
-└── csr/               # Control and Status Register definitions
-    ├── GPIO.hjson     # Register specification file
-    ├── GPIO_csr.h     # Generated C header file
-    ├── GPIO_csr.md    # Register documentation
-    └── GPIO_csr.vhd   # Generated CSR VHDL package
-sim/                   # Simulation and verification files
-├── tb_GPIO_bidir.vhd  # Testbench for bidirectional I/O testing
-GPIO.core              # FuseSoC core specification file
-```
+
+The CSR bank uses 2 address bits (`GPIO_ADDR_WIDTH = 2`) and 8-bit data (`GPIO_DATA_WIDTH = 8`), see `asylum.GPIO_csr_pkg` (`GPIO_IRQ_ADDR_WIDTH = 2`, `GPIO_IRQ_DATA_WIDTH = 8` in `asylum.GPIO_irq_csr_pkg` for `sbi_GPIO_irq`).
 
 ## HDL Modules
 
-### GPIO
+| File | Unit | Kind | Role |
+|------|------|------|------|
+| [hdl/gpio_pkg.vhd](hdl/gpio_pkg.vhd) | `gpio_pkg` | package | Component declarations of `GPIO_core`, `GPIO_irq_core`, `sbi_GPIO`, `sbi_GPIO_irq` and `GPIO_v1` |
+| [hdl/GPIO_core.vhd](hdl/GPIO_core.vhd) | `GPIO_core` | entity | Combinational GPIO logic between `GPIO_registers` and the pins |
+| [hdl/sbi_GPIO.vhd](hdl/sbi_GPIO.vhd) | `sbi_GPIO` | entity | Top-level: `GPIO_registers` + `GPIO_core` |
+| [hdl/GPIO_irq_core.vhd](hdl/GPIO_irq_core.vhd) | `GPIO_irq_core` | entity | GPIO logic with output register, input register, edge detection and `GIC_core` |
+| [hdl/sbi_GPIO_irq.vhd](hdl/sbi_GPIO_irq.vhd) | `sbi_GPIO_irq` | entity | Interrupt variant: `GPIO_irq_registers` + `GPIO_irq_core` |
+| [hdl/legacy/GPIO_v1.vhd](hdl/legacy/GPIO_v1.vhd) | `GPIO_v1` | entity | Legacy GPIO with direct `cs/re/we` bus; only in the `sim` fileset (reference of `tb_GPIO_vs_v1`) |
+| hdl/csr/GPIO_csr.vhd | `GPIO_registers` | entity | Generated CSR bank of `sbi_GPIO` (regtool) |
+| hdl/csr/GPIO_csr_pkg.vhd | `GPIO_csr_pkg` | package | Generated types (`GPIO_sw2hw_t`, `GPIO_hw2sw_t`), address constants |
+| hdl/csr/GPIO_irq_csr.vhd | `GPIO_irq_registers` | entity | Generated CSR bank of `sbi_GPIO_irq` (regtool) |
+| hdl/csr/GPIO_irq_csr_pkg.vhd | `GPIO_irq_csr_pkg` | package | Generated types (`GPIO_irq_sw2hw_t`, `GPIO_irq_hw2sw_t`), address constants |
 
-**File**: `hdl/GPIO.vhd`
+### sbi_GPIO_irq
 
-The main GPIO core module that implements the fundamental GPIO functionality. This module directly interfaces with the CSR (Control and Status Register) system and provides I/O pin control.
+#### Parameters
 
-#### Generics
-
-| Generic | Type | Default | Description |
-|---------|------|---------|-------------|
-| `NB_IO` | natural | 8 | Number of I/O pins. Must be ≤ data width of the CSR system |
-| `IT_ENABLE` | boolean | false | Enable interrupt generation capability |
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `NAME` | string | `""` | Instance name, forwarded to the CSR block (`MODULE_NAME`) |
+| `NB_IO` | natural | `8` | Number of I/O lines; must be <= 8 |
+| `DATA_OE_INIT` | std_logic_vector | *(none)* | Reset value of `data_oe` (8 bits) |
+| `IRQ_POSEDGE` | std_logic_vector | *(none)* | Per-line enable of the rising edge interrupt (8 bits, bit i = line i) |
+| `IRQ_NEGEDGE` | std_logic_vector | *(none)* | Per-line enable of the falling edge interrupt (8 bits, bit i = line i) |
 
 #### Ports
 
-| Port | Direction | Type | Width | Description |
-|------|-----------|------|-------|-------------|
-| `clk_i` | in | std_logic | 1 | System clock |
-| `cke_i` | in | std_logic | 1 | Clock enable signal |
-| `arstn_i` | in | std_logic | 1 | Asynchronous active-low reset |
-| `data_i` | in | std_logic_vector | NB_IO | Input data from GPIO pins |
-| `data_o` | out | std_logic_vector | NB_IO | Output data to GPIO pins |
-| `data_oe_o` | out | std_logic_vector | NB_IO | Output enable control (1=output, 0=input) |
-| `interrupt_o` | out | std_logic | 1 | Interrupt request signal |
-| `interrupt_ack_i` | in | std_logic | 1 | Interrupt acknowledge signal |
-| `sw2hw_i` | in | GPIO_sw2hw_t | - | Software-to-hardware register interface |
-| `hw2sw_o` | out | GPIO_hw2sw_t | - | Hardware-to-software register interface |
+| Name | Direction | Type | Description |
+|------|-----------|------|-------------|
+| `clk_i` | in | std_logic | System clock |
+| `cke_i` | in | std_logic | Clock enable (not used by `GPIO_irq_core`) |
+| `arstn_i` | in | std_logic | Asynchronous reset, active low |
+| `sbi_ini_i` | in | sbi_ini_t | SBI request |
+| `sbi_tgt_o` | out | sbi_tgt_t | SBI response |
+| `data_i` | in | std_logic_vector(NB_IO-1 downto 0) | Input values of the lines |
+| `data_o` | out | std_logic_vector(NB_IO-1 downto 0) | Output values (register written through `data`) |
+| `data_oe_o` | out | std_logic_vector(NB_IO-1 downto 0) | Output enables, 1 = output |
+| `it_o` | out | std_logic | Interrupt request: OR of the `isr` bits |
 
-#### Operation
+### GPIO_core
 
-The GPIO module operates as follows:
+#### Parameters
 
-1. **Data Path**: The module multiplexes the internal output (`data_out`) and input (`data_in`) based on the direction register (`data_oe`)
-   - When a pin is configured as output (data_oe[i]=1), the output driver controls the pin
-   - When a pin is configured as input (data_oe[i]=0), the input is sampled
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `NB_IO` | natural | `8` | Number of I/O lines |
 
-2. **Register Interface**: Communication with the CSR system via `sw2hw_i` and `hw2sw_o` interfaces
-   - `sw2hw_i.data_out.value`: Output register value from software
-   - `sw2hw_i.data_oe.value`: Direction register value from software
-   - `hw2sw_o.data_in.value`: Feedback of actual pin states to software
-   - `hw2sw_o.data.value`: Read-back of pin states with direction masking applied
+#### Ports
 
-3. **Interrupt Handling** (when IT_ENABLE=true): Can generate interrupts on GPIO state changes
+| Name | Direction | Type | Description |
+|------|-----------|------|-------------|
+| `clk_i` | in | std_logic | Clock (not used, the logic is combinational) |
+| `cke_i` | in | std_logic | Clock enable (not used) |
+| `arstn_i` | in | std_logic | Reset (not used) |
+| `data_i` | in | std_logic_vector(NB_IO-1 downto 0) | Pin inputs, written into `data_in` |
+| `data_o` | out | std_logic_vector(NB_IO-1 downto 0) | `data_out` register value |
+| `data_oe_o` | out | std_logic_vector(NB_IO-1 downto 0) | `data_oe` register value |
+| `sw2hw_i` | in | GPIO_sw2hw_t | Register values from `GPIO_registers` |
+| `hw2sw_o` | out | GPIO_hw2sw_t | `data` read value and `data_in` update to `GPIO_registers` |
+
+### GPIO_irq_core
+
+#### Parameters
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `NB_IO` | natural | `8` | Number of I/O lines |
+| `IRQ_POSEDGE` | std_logic_vector | *(none)* | Rising edge interrupt enables (CSR width, 8 bits) |
+| `IRQ_NEGEDGE` | std_logic_vector | *(none)* | Falling edge interrupt enables (CSR width, 8 bits) |
+
+#### Ports
+
+| Name | Direction | Type | Description |
+|------|-----------|------|-------------|
+| `clk_i` | in | std_logic | System clock |
+| `cke_i` | in | std_logic | Clock enable (not used) |
+| `arstn_i` | in | std_logic | Asynchronous reset, active low (output register) |
+| `data_i` | in | std_logic_vector(NB_IO-1 downto 0) | Pin inputs |
+| `data_o` | out | std_logic_vector(NB_IO-1 downto 0) | Output register, loaded on a software write of `data` |
+| `data_oe_o` | out | std_logic_vector(NB_IO-1 downto 0) | `data_oe` register value |
+| `sw2hw_i` | in | GPIO_irq_sw2hw_t | Register values from `GPIO_irq_registers` |
+| `hw2sw_o` | out | GPIO_irq_hw2sw_t | `data` read value and next `isr` value |
+| `it_o` | out | std_logic | Merged interrupt from `GIC_core` |
 
 ### GPIO_v1
 
-**File**: `hdl/GPIO_v1.vhd`
+#### Parameters
 
-Legacy GPIO implementation that uses the older PBI (Processor Bus Interface) for register access. This module is maintained for backward compatibility.
-
-#### Generics
-
-| Generic | Type | Default | Description |
-|---------|------|---------|-------------|
-| `SIZE_ADDR` | natural | 2 | Bus address width in bits |
-| `SIZE_DATA` | natural | 8 | Bus data width in bits |
-| `NB_IO` | natural | 8 | Number of I/O pins. Must be ≤ SIZE_DATA |
-| `DATA_OE_INIT` | std_logic_vector | - | Initial direction state after reset (0=input, 1=output) |
-| `DATA_OE_FORCE` | std_logic_vector | - | Force direction bits (read-only direction pins) |
-| `IT_ENABLE` | boolean | false | Enable interrupt generation capability |
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `SIZE_ADDR` | natural | `2` | Bus address width |
+| `SIZE_DATA` | natural | `8` | Bus data width |
+| `NB_IO` | natural | `8` | Number of I/O lines; must be <= `SIZE_DATA` |
+| `DATA_OE_INIT` | std_logic_vector | *(none)* | Direction after reset (NB_IO bits) |
+| `DATA_OE_FORCE` | std_logic_vector | *(none)* | 1: direction of the line fixed to `DATA_OE_INIT` (NB_IO bits) |
 
 #### Ports
 
-| Port | Direction | Type | Width | Description |
-|------|-----------|------|-------|-------------|
-| `clk_i` | in | std_logic | 1 | System clock |
-| `cke_i` | in | std_logic | 1 | Clock enable signal |
-| `arstn_i` | in | std_logic | 1 | Asynchronous active-low reset |
-| `cs_i` | in | std_logic | 1 | Chip select |
-| `re_i` | in | std_logic | 1 | Read enable |
-| `we_i` | in | std_logic | 1 | Write enable |
-| `addr_i` | in | std_logic_vector | SIZE_ADDR | Register address |
-| `wdata_i` | in | std_logic_vector | SIZE_DATA | Write data |
-| `rdata_o` | out | std_logic_vector | SIZE_DATA | Read data |
-| `busy_o` | out | std_logic | 1 | Bus busy signal |
-| `data_i` | in | std_logic_vector | NB_IO | Input data from GPIO pins |
-| `data_o` | out | std_logic_vector | NB_IO | Output data to GPIO pins |
-| `data_oe_o` | out | std_logic_vector | NB_IO | Output enable control |
-| `interrupt_o` | out | std_logic | 1 | Interrupt request signal |
-| `interrupt_ack_i` | in | std_logic | 1 | Interrupt acknowledge signal |
+| Name | Direction | Type | Description |
+|------|-----------|------|-------------|
+| `clk_i` | in | std_logic | System clock |
+| `cke_i` | in | std_logic | Clock enable of the register writes |
+| `arstn_i` | in | std_logic | Asynchronous reset, active low |
+| `cs_i` | in | std_logic | Chip select |
+| `re_i` | in | std_logic | Read enable |
+| `we_i` | in | std_logic | Write enable |
+| `addr_i` | in | std_logic_vector(SIZE_ADDR-1 downto 0) | Address (0: data, 1: data_oe, 2: data_in, 3: data_out) |
+| `wdata_i` | in | std_logic_vector(SIZE_DATA-1 downto 0) | Write data |
+| `rdata_o` | out | std_logic_vector(SIZE_DATA-1 downto 0) | Read data (combinational on `addr_i`) |
+| `busy_o` | out | std_logic | Always `'0'` |
+| `data_i` | in | std_logic_vector(NB_IO-1 downto 0) | Pin inputs (registered, no synchronizer) |
+| `data_o` | out | std_logic_vector(NB_IO-1 downto 0) | Output values |
+| `data_oe_o` | out | std_logic_vector(NB_IO-1 downto 0) | Output enables |
 
-#### Operation
+## Register Map
 
-GPIO_v1 provides a legacy register interface using direct address decoding:
+The register maps are generated by regtool, one CSR block per bus wrapper:
 
-1. **Register Map** (PBI-based):
-   - Address 0x0: Data register (read: pin states with mask, write: output data)
-   - Address 0x1: Direction register (read/write: I/O direction control)
-   - Address 0x2: Data input (read-only: raw input data)
-   - Address 0x3: Data output (read/write: output register)
+- `sbi_GPIO`: register documentation **[hdl/csr/GPIO_csr.md](hdl/csr/GPIO_csr.md)**, source [hdl/csr/GPIO.hjson](hdl/csr/GPIO.hjson), C header [hdl/csr/GPIO_csr.h](hdl/csr/GPIO_csr.h)
+- `sbi_GPIO_irq`: register documentation **[hdl/csr/GPIO_irq_csr.md](hdl/csr/GPIO_irq_csr.md)**, source [hdl/csr/GPIO_irq.hjson](hdl/csr/GPIO_irq.hjson), C header [hdl/csr/GPIO_irq_csr.h](hdl/csr/GPIO_irq_csr.h)
 
-2. **Bus Protocol**: Responds to PBI read/write transactions with chip select and address decoding
+Notes:
 
-### sbi_GPIO
-
-**File**: `hdl/sbi_GPIO.vhd`
-
-Modern GPIO wrapper that provides SBI (Simple Bus Interface) abstraction. It instantiates both the CSR register controller and the GPIO core, connecting them together with the SBI bus.
-
-#### Generics
-
-| Generic | Type | Default | Description |
-|---------|------|---------|-------------|
-| `NB_IO` | natural | 8 | Number of I/O pins |
-| `DATA_OE_INIT` | std_logic_vector | - | Initial direction state after reset |
-| `IT_ENABLE` | boolean | false | Enable interrupt generation capability |
-
-#### Ports
-
-| Port | Direction | Type | Width | Description |
-|------|-----------|------|-------|-------------|
-| `clk_i` | in | std_logic | 1 | System clock |
-| `cke_i` | in | std_logic | 1 | Clock enable signal |
-| `arstn_i` | in | std_logic | 1 | Asynchronous active-low reset |
-| `sbi_ini_i` | in | sbi_ini_t | - | SBI initiator interface (requests) |
-| `sbi_tgt_o` | out | sbi_tgt_t | - | SBI target interface (responses) |
-| `data_i` | in | std_logic_vector | NB_IO | Input data from GPIO pins |
-| `data_o` | out | std_logic_vector | NB_IO | Output data to GPIO pins |
-| `data_oe_o` | out | std_logic_vector | NB_IO | Output enable control |
-| `interrupt_o` | out | std_logic | 1 | Interrupt request signal |
-| `interrupt_ack_i` | in | std_logic | 1 | Interrupt acknowledge signal |
-
-#### Operation
-
-sbi_GPIO serves as the primary integration point for the GPIO component:
-
-1. **Hierarchical Structure**:
-   - Instantiates `GPIO_registers` (CSR controller) for register management
-   - Instantiates `GPIO` (core) for I/O control
-   - Bridges SBI bus protocol to internal register interface
-
-2. **Data Flow**:
-   - SBI bus transactions → GPIO_registers → sw2hw control signals
-   - GPIO core hw2sw status signals → GPIO_registers → SBI read responses
-   - GPIO core ↔ external I/O pins
-
-## Register Map (CSR)
-
-**Documentation**: [hdl/csr/GPIO_csr.md](hdl/csr/GPIO_csr.md)
-
-**Specification**: `hdl/csr/GPIO.hjson`
-
-The GPIO component exposes four 8-bit registers for software control and status monitoring. All registers are 8-bit wide and accessible via the SBI interface.
-
-### Register Summary
-
-| Address | Offset | Register | Access | Width | Description |
-|---------|--------|----------|--------|-------|-------------|
-| 0x0 | +0 | [data](#0x0-data) | R/W | 8 bits | Data with direction mask applied |
-| 0x1 | +1 | [data_oe](#0x1-data_oe) | R/W | 8 bits | I/O Direction control |
-| 0x2 | +2 | [data_in](#0x2-data_in) | R/O | 8 bits | GPIO Input values |
-| 0x3 | +3 | [data_out](#0x3-data_out) | R/W | 8 bits | GPIO Output values |
-
-### 0x0 data
-
-**Description**: Data register - provides read-back with direction mask applied
-
-**Access**: Read/Write
-
-**Fields**:
-- **[7:0] value**: Data with data_oe mask apply
-  - Reading this register returns the GPIO pin states with the direction mask applied
-  - For output pins (data_oe=1), returns the output data value
-  - For input pins (data_oe=0), returns the input pin state
-
-### 0x1 data_oe
-
-**Description**: GPIO Direction control register
-
-**Access**: Read/Write
-
-**Initial Value**: `DATA_OE_INIT` parameter
-
-**Fields**:
-- **[7:0] value**: GPIO Direction
-  - `0` = Input (pin is used as input)
-  - `1` = Output (pin is used as output)
-  - Each bit controls one GPIO pin independently
-
-### 0x2 data_in
-
-**Description**: GPIO Input register - raw input values from pins
-
-**Access**: Read-Only
-
-**Fields**:
-- **[7:0] value**: Input Data of GPIO
-  - Contains the direct sampled values from GPIO input pins
-  - Always reflects the actual pin states regardless of direction settings
-
-### 0x3 data_out
-
-**Description**: GPIO Output register - output values to pins
-
-**Access**: Read/Write
-
-**Fields**:
-- **[7:0] value**: Output Data of GPIO
-  - Contains the values driven on GPIO pins configured as outputs
-  - Bits corresponding to input pins (data_oe=0) have no effect on the pins
+- The reset value of `data_oe` is the `DATA_OE_INIT` generic in both blocks.
+- `GPIO`: `data` is an external register (`hwtype: ext`) whose read value is computed by `GPIO_core`; writes to `data` are aliased to `data_out` (`alias_write`). `data_in` is written by hardware every cycle.
+- `GPIO_irq`: there is no `data_in` / `data_out` register; `data` reads the masked pin / output value and writes load the output register of `GPIO_irq_core`. `isr` is rw1c, `imr` resets to 0.
 
 ## Verification
 
-The GPIO component includes comprehensive verification through simulation testbenches.
+### Testbenches
 
-### Testbench Structure
+| File | DUT | Description |
+|------|-----|-------------|
+| [sim/tb_GPIO.vhd](sim/tb_GPIO.vhd) | `sbi_GPIO` | UVVM testbench with the SBI VIP and GPIO VIP (`bitvis_vip_gpio`), 8 lines, `DATA_OE_INIT = 0`. Checks the post-reset state (outputs 0, `data` / `data_in` follow the input 0xA5), output mode (`data_oe = 0xFF`, write 0x21 to `data`, check pins and the 4 registers) and input mode (`data_oe = 0`, `data` / `data_in` follow the input 0x3C, `data_out` kept) |
+| [sim/tb_GPIO_irq.vhd](sim/tb_GPIO_irq.vhd) | `sbi_GPIO_irq` | UVVM testbench, `NB_IO = 4`, `IRQ_POSEDGE = 0x0A`, `IRQ_NEGEDGE = 0x0C`. Same data / direction checks on `data` and `data_oe`, then interrupts: rising edge on line 1 with only line 0 unmasked (no interrupt, `isr = 0`), rising edge on line 1 with `imr = 0x02` (`it_o = 1`, `isr = 0x02`, cleared by writing 1), falling edge on line 2 with `imr = 0x04` (`isr = 0x04`, cleared) |
+| [sim/tb_GPIO_vs_v1.vhd](sim/tb_GPIO_vs_v1.vhd) | `sbi_GPIO` + `GPIO_v1` | Lock-step comparison: both instances get the same bus accesses and pin inputs and `rdata`, `busy`, `data_o`, `data_oe_o` are compared on every falling clock edge (`severity failure`). Sequence: output mode, walking-one writes to `data`, input mode, walking-one on `data_i` with reads of `data`; ends with `Test OK` |
 
-**File**: `sim/tb_GPIO_bidir.vhd`
+### Targets
 
-The `tb_GPIO_bidir` testbench provides functional verification of the GPIO component, particularly focusing on bidirectional I/O operation.
+| Target | Toplevel | Description |
+|--------|----------|-------------|
+| `default` | `sbi_GPIO` | HDL fileset + generation of both CSR blocks (not a simulation) |
+| `sim_testcase` | `tb_GPIO` | Simulation of `sbi_GPIO` with VIP |
+| `sim_testcase_irq` | `tb_GPIO_irq` | Simulation of `sbi_GPIO_irq` with VIP |
+| `sim_testcase_vs_v1` | `tb_GPIO_vs_v1` | Simulation of `sbi_GPIO` against `GPIO_v1` |
 
-#### Test Coverage
+### How to Run
 
-The testbench validates:
-
-1. **Direction Control**: 
-   - Configuration of pins as inputs or outputs
-   - Switching direction at runtime
-   - Direction persistence across clock cycles
-
-2. **Data I/O**:
-   - Writing to output pins and verifying external data
-   - Reading from input pins and verifying internal capture
-   - Masking behavior based on direction settings
-
-3. **Bidirectional Operation**:
-   - Simultaneous input and output on different pins
-   - Dynamic direction switching with data preservation
-   - Pull-up/pull-down simulation
-
-4. **Reset Behavior**:
-   - Proper initialization on asynchronous reset
-   - Direction register initialization with `DATA_OE_INIT`
-   - Register state clearing
-
-### Running Simulations
-
-The component uses **GHDL** as the default simulation tool and is configured via FuseSoC.
-
-#### Available Simulation Targets
-
-**Default Target** (`default`):
-- Synthesizes the design without simulation
-- Uses the main GPIO module
-- CSR code is auto-generated via the `regtool` generator
-
-**Simulation Target** (`sim_testcase`):
-- Runs the testbench with all test cases
-- Generates VCD waveform file: `dut.vcd`
-- Uses GHDL as the simulation engine
-
-#### Simulation Command
+The default tool is GHDL (`mk/defs.mk`: `TOOL ?= ghdl`, `TARGET ?= sim_testcase`).
 
 ```bash
-fusesoc run --target=sim_testcase asylum:component:GPIO:1.6.2
+make help                 # variables, rules and target list (mk/targets.txt)
+make sim_testcase         # run one target (log in log/)
+make nonreg_sim           # run every sim_* target
+make TARGETS_FILTER=irq nonreg_sim   # run a filtered subset
+make clean                # remove build/ and log/
 ```
 
-This command will:
-1. Generate CSR VHDL code from `hdl/csr/GPIO.hjson`
-2. Compile all testbench and design files
-3. Execute the simulation
-4. Produce `dut.vcd` for waveform analysis
+Equivalent FuseSoC command:
 
-#### Waveform Analysis
+```bash
+fusesoc --cores-root . run --build-root build --target sim_testcase_irq asylum:component:GPIO:1.7.1
+```
 
-Open the generated VCD file in a waveform viewer (e.g., GTKWave) to analyze:
-- GPIO signal timing
-- Register state transitions
-- Bus transactions
-- Interrupt signals (if IT_ENABLE=true)
+`sim_testcase` and `sim_testcase_irq` run GHDL with `--fst=dut.fst`, `sim_testcase_vs_v1` with `--vcd=dut.vcd`. CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the three `sim_*` targets.
 
-### CSR Code Generation
+## Synthesis
 
-The CSR registers are automatically generated from the specification file using the `regtool` generator:
+No dedicated synthesis target. The HDL sources of the `default` target (`hdl/*.vhd` + generated CSR) contain no simulation-only construct and are synthesizable; `hdl/legacy/GPIO_v1.vhd` is only part of the `sim` fileset. Resource usage is small and set by `NB_IO` (the CSR registers are always 8 bits wide). `data_i` is not synchronized inside the IP (one register stage in `data_in` for `sbi_GPIO`, direct combinational read path and edge detector in `sbi_GPIO_irq`); synchronize asynchronous inputs at the chip / FPGA top level.
 
-**Generator Configuration** (from `GPIO.core`):
-- **Input**: `hdl/csr/GPIO.hjson`
-- **Output Directory**: `hdl/csr/`
-- **Generated Files**:
-  - `GPIO_csr.vhd` - VHDL CSR controller package
-  - `GPIO_csr_pkg.vhd` - VHDL type definitions
-  - `GPIO_csr.h` - C header file for software access
-  - `GPIO_csr.md` - Register documentation
+## Design Notes
 
-**Parameters**:
-- `name`: GPIO
-- `copy`: Copies generated files to `hdl/csr/`
-- `logical_name`: asylum
+### Data Path
 
-### Project Configuration
+- Output: `data_o = data_out`, `data_oe_o = data_oe` (1 = output).
+- Read of `data`: `(data_out and data_oe) or (data_in and not data_oe)`: output lines return the driven value, input lines the pin value.
+- `data_i` is zero-extended to the 8-bit CSR width: input bits above `NB_IO` read as 0.
 
-**File**: `GPIO.core`
+### Edge Interrupts (sbi_GPIO_irq)
 
-The project uses FuseSoC for build management. Key configuration:
+`GPIO_irq_core` registers the inputs (`data_in_r`) and computes:
 
-- **Component Name**: `asylum:component:GPIO:1.6.2`
-- **Default Tool**: GHDL (VHDL simulator)
-- **Dependencies**:
-  - `asylum:utils:generators` (for code generation)
-  - `asylum:utils:pkg` (utility packages)
-- **CSR Generator**: regtool (auto-generates register interfaces)
+- `posedge = data_in and not data_in_r`, `negedge = not data_in and data_in_r`
+- `its = (posedge and IRQ_POSEDGE) or (negedge and IRQ_NEGEDGE)`
 
-### Makefile
+`GIC_core` then updates `isr = (imr and its) or isr` every cycle and drives `it_o = or(isr)`: an edge on a masked line is not recorded. Software clears an interrupt by writing 1 to its `isr` bit.
 
-**File**: `Makefile`
+### Legacy GPIO_v1
 
-Provides convenient targets for common tasks like simulation, synthesis, and cleanup.
+Same register layout (0: `data`, 1: `data_oe`, 2: `data_in`, 3: `data_out`, writes to 0 or 3 update the output register). `DATA_OE_FORCE` fixes the direction of selected lines to `DATA_OE_INIT`; such lines return their output (output-only) or input (input-only) value at every address. `tb_GPIO_vs_v1` checks that `sbi_GPIO` behaves like `GPIO_v1` with `DATA_OE_FORCE = 0`.
+
+## Directory Structure
+
+```
+asylum-component-gpio/
+├── GPIO.core               # FuseSoC core (asylum:component:GPIO)
+├── Makefile                # Common Asylum Makefile (FuseSoC wrapper)
+├── mk/
+│   ├── defs.mk             # FILE_CORE, default TARGET and TOOL
+│   └── targets.txt         # Target list (generated from the .core)
+├── .github/workflows/
+│   └── ci.yml              # CI jobs (generated by make ci_generate)
+├── doc/
+│   └── GPIO.drawio         # Block diagram
+├── hdl/
+│   ├── gpio_pkg.vhd
+│   ├── GPIO_core.vhd
+│   ├── sbi_GPIO.vhd
+│   ├── GPIO_irq_core.vhd
+│   ├── sbi_GPIO_irq.vhd
+│   ├── legacy/
+│   │   └── GPIO_v1.vhd     # Legacy implementation (simulation reference)
+│   └── csr/
+│       ├── GPIO.hjson           # Register description (source)
+│       ├── GPIO_csr.vhd         # Generated
+│       ├── GPIO_csr_pkg.vhd     # Generated
+│       ├── GPIO_csr.md          # Generated
+│       ├── GPIO_csr.h           # Generated
+│       ├── GPIO_irq.hjson       # Register description (source)
+│       ├── GPIO_irq_csr.vhd     # Generated
+│       ├── GPIO_irq_csr_pkg.vhd # Generated
+│       ├── GPIO_irq_csr.md      # Generated
+│       └── GPIO_irq_csr.h       # Generated
+└── sim/
+    ├── tb_GPIO.vhd         # UVVM testbench of sbi_GPIO
+    ├── tb_GPIO_irq.vhd     # UVVM testbench of sbi_GPIO_irq
+    └── tb_GPIO_vs_v1.vhd   # Comparison sbi_GPIO / GPIO_v1
+```
+
+## Dependencies
+
+| Core | Used by (fileset) | Purpose |
+|------|-------------------|---------|
+| `asylum:system:GIC` | `hdl` | `GIC_core` used by `GPIO_irq_core` |
+| `asylum:utils:generators` | `hdl` | regtool generator and CSR building blocks (`csr_reg`, `csr_ext`) |
+| `asylum:utils:pkg` | `hdl` | Common packages (`sbi_pkg`, `pbi_pkg`, `string_pkg`, ...) |
+| `bitvis:verification:uvvm` | `sim` | UVVM utility library, SBI VIP and GPIO VIP |
