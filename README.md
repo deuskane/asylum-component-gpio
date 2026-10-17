@@ -290,7 +290,7 @@ Notes:
 | File | DUT | Description |
 |------|-----|-------------|
 | [sim/tb_GPIO.vhd](sim/tb_GPIO.vhd) | `sbi_GPIO` | UVVM testbench with the SBI VIP and GPIO VIP (`bitvis_vip_gpio`), 8 lines, `DATA_OE_INIT = 0`. Checks the post-reset state (outputs 0, `data` / `data_in` follow the input 0xA5), output mode (`data_oe = 0xFF`, write 0x21 to `data`, check pins and the 4 registers) and input mode (`data_oe = 0`, `data` / `data_in` follow the input 0x3C, `data_out` kept) |
-| [sim/tb_GPIO_irq.vhd](sim/tb_GPIO_irq.vhd) | `sbi_GPIO_irq` | UVVM testbench, `NB_IO = 4`, `IRQ_POSEDGE = 0x0A`, `IRQ_NEGEDGE = 0x0C`. Same data / direction checks on `data` and `data_oe`, then interrupts: rising edge on line 1 with only line 0 unmasked (no interrupt, `isr = 0`), rising edge on line 1 with `imr = 0x02` (`it_o = 1`, `isr = 0x02`, cleared by writing 1), falling edge on line 2 with `imr = 0x04` (`isr = 0x04`, cleared) |
+| [sim/tb_GPIO_irq.vhd](sim/tb_GPIO_irq.vhd) | `sbi_GPIO_irq` | UVVM testbench, `NB_IO = 4`, `IRQ_POSEDGE = 0x0A`, `IRQ_NEGEDGE = 0x0C`. Same data / direction checks on `data` and `data_oe`, then interrupts: rising edge on line 1 with only line 0 unmasked (no interrupt, `isr = 0`), rising edge on line 1 with `imr = 0x02` (`it_o = 1`, `isr = 0x02`, cleared by writing 1), falling edge on line 2 with `imr = 0x04` (`isr = 0x04`, cleared), then a rising edge on line 1 configured as output (no interrupt) and as input (interrupt) |
 | [sim/tb_GPIO_vs_v1.vhd](sim/tb_GPIO_vs_v1.vhd) | `sbi_GPIO` + `GPIO_v1` | Lock-step comparison: both instances get the same bus accesses and pin inputs and `rdata`, `busy`, `data_o`, `data_oe_o` are compared on every falling clock edge (`severity failure`). Sequence: output mode, walking-one writes to `data`, input mode, walking-one on `data_i` with reads of `data`; ends with `Test OK` |
 
 ### Targets
@@ -339,7 +339,7 @@ No dedicated synthesis target. The HDL sources of the `default` target (`hdl/*.v
 `GPIO_irq_core` registers the inputs (`data_in_r`) and computes:
 
 - `posedge = data_in and not data_in_r`, `negedge = not data_in and data_in_r`
-- `its = (posedge and IRQ_POSEDGE) or (negedge and IRQ_NEGEDGE)`
+- `its = ((posedge and IRQ_POSEDGE) or (negedge and IRQ_NEGEDGE)) and not data_oe`: a line configured as output raises no interrupt (its `data_i` is the loopback of the driven value)
 
 `GIC_core` then updates `isr = (imr and its) or isr` every cycle and drives `it_o = or(isr)`: an edge on a masked line is not recorded. Software clears an interrupt by writing 1 to its `isr` bit.
 

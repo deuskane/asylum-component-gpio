@@ -118,8 +118,11 @@ begin
   data_in_posedge       <=     data_in and not data_in_r; -- Rising  edge detection
   data_in_negedge       <= not data_in and     data_in_r; -- Falling edge detection
 
+  -- No interrupt on the lines configured as output (data_i is the loopback
+  -- of the driven value : a software write is not an event)
   gic_it                <= ((data_in_posedge and IRQ_POSEDGE) or 
-                            (data_in_negedge and IRQ_NEGEDGE));
+                            (data_in_negedge and IRQ_NEGEDGE)) and
+                           not sw2hw_i.data_oe.value;
 
   hw2sw_o.isr.we        <= '1';
   

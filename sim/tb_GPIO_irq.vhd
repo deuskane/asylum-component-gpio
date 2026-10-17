@@ -197,6 +197,25 @@ begin
     sbi_check(GPIO_IRQ_ISR, x"00", "Check posedge ISR cleared", clk_i, sbi_if);
     check_value(it_o, '0', ERROR, "Check interrupt output cleared after ISR clear");
 
+    ------------------------------------------------
+    log(ID_LOG_HDR, "No interrupt on a line configured as output", C_SCOPE);
+    ------------------------------------------------
+    sbi_write(GPIO_IRQ_IMR    , x"02", "Enable GPIO[1] interrupt", clk_i, sbi_if);
+    sbi_write(GPIO_IRQ_DATA_OE, x"02", "GPIO[1] output", clk_i, sbi_if);
+    sbi_write(GPIO_IRQ_DATA   , x"02", "Drive GPIO[1] high", clk_i, sbi_if);
+    gpio_set(x"2", "Loopback of GPIO[1] : rising edge", data_i, C_SCOPE);
+    wait_num_rising_edge(clk_i, 4);
+    check_value(it_o, '0', ERROR, "Check no interrupt on an output line");
+    sbi_check(GPIO_IRQ_ISR, x"00", "Check ISR on an output line", clk_i, sbi_if);
+    gpio_set(x"0", "Loopback of GPIO[1] : falling edge", data_i, C_SCOPE);
+    wait_num_rising_edge(clk_i, 4);
+    sbi_write(GPIO_IRQ_DATA_OE, x"00", "GPIO[1] input", clk_i, sbi_if);
+    gpio_set(x"2", "Rising edge on input GPIO[1]", data_i, C_SCOPE);
+    wait_num_rising_edge(clk_i, 4);
+    check_value(it_o, '1', ERROR, "Check interrupt on an input line");
+    sbi_check(GPIO_IRQ_ISR, x"02", "Check ISR on an input line", clk_i, sbi_if);
+    sbi_write(GPIO_IRQ_ISR, x"02", "Clear ISR", clk_i, sbi_if);
+
     report "[TB_GPIO] All SBI GPIO checks passed";
     report_alert_counters(FINAL);
     std.env.stop;
