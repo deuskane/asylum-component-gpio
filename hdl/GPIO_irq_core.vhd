@@ -24,6 +24,7 @@ library IEEE;
 use     IEEE.STD_LOGIC_1164.ALL;
 use     IEEE.numeric_std.ALL;
 library asylum;
+use     asylum.logic_pkg.all;
 use     asylum.GIC_pkg.all;
 use     asylum.GPIO_irq_csr_pkg.ALL;
 
@@ -56,6 +57,7 @@ architecture rtl of GPIO_irq_core is
   -- Local parameters
   -----------------------------------------------------------------------------
   constant CSR_DATA_WIDTH : natural := hw2sw_o.data.value'length;
+  constant ISR_NO_MASK    : std_logic_vector (CSR_DATA_WIDTH-1 downto 0) := (others => '1');
   -----------------------------------------------------------------------------
   -- Signal
   -----------------------------------------------------------------------------
@@ -123,12 +125,17 @@ begin
 
   hw2sw_o.isr.we        <= '1';
   
+  -- The isr records every enabled edge (raw status, can be polled), the imr
+  -- only masks the interrupt output : GIC_core gets no mask, and it_o is the
+  -- OR of the unmasked isr bits (masking a pending line drops it_o).
   ins_GIC_core : GIC_core
   port map(
-    itm_o     => it_o              ,
+    itm_o     => open              ,
     its_i     => gic_it            ,
     isr_i     => sw2hw_i.isr.value ,
     isr_o     => hw2sw_o.isr.value ,
-    imr_i     => sw2hw_i.imr.enable
+    imr_i     => ISR_NO_MASK
     );
+
+  it_o                  <= reduce_or(sw2hw_i.isr.value and sw2hw_i.imr.enable);
 end rtl;

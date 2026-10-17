@@ -155,8 +155,20 @@ begin
     gpio_set(x"2", "Drive rising edge on bit 1", data_i, C_SCOPE);
     wait until rising_edge(clk_i);
 
-    check_value(it_o, '0', ERROR, "Check posedge interrupt output");
-    sbi_check(GPIO_IRQ_ISR, x"00", "Check posedge ISR", clk_i, sbi_if);
+    -- The isr records the edges of the masked lines (line 3 rising when
+    -- switching to input mode, lines 2 and 3 falling, line 1 rising), the imr
+    -- only masks it_o
+    check_value(it_o, '0', ERROR, "Check no interrupt on masked lines");
+    sbi_check(GPIO_IRQ_ISR, x"0E", "Check ISR records the masked edges", clk_i, sbi_if);
+
+    sbi_write(GPIO_IRQ_IMR, x"02", "Unmask pending GPIO[1]", clk_i, sbi_if);
+    wait until rising_edge(clk_i);
+    check_value(it_o, '1', ERROR, "Check interrupt when a pending line is unmasked");
+    sbi_write(GPIO_IRQ_IMR, x"00", "Mask pending GPIO[1]", clk_i, sbi_if);
+    wait until rising_edge(clk_i);
+    check_value(it_o, '0', ERROR, "Check no interrupt when a pending line is masked");
+    sbi_write(GPIO_IRQ_ISR, x"FF", "Clear ISR", clk_i, sbi_if);
+    sbi_check(GPIO_IRQ_ISR, x"00", "Check ISR cleared", clk_i, sbi_if);
 
     ------------------------------------------------
     log(ID_LOG_HDR, "Test posedge interrupt detection GPIO[1]", C_SCOPE);
