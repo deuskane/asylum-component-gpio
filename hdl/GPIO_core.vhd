@@ -71,6 +71,7 @@ architecture rtl of GPIO_core is
   -----------------------------------------------------------------------------
   -- Signal
   -----------------------------------------------------------------------------
+  signal data_in_meta_r  : std_logic_vector (NB_IO-1     downto 0);
   
 begin
 
@@ -84,8 +85,21 @@ begin
                             (sw2hw_i.data_in .value and not sw2hw_i.data_oe .value));
   hw2sw_o.data.we       <= '1';
 
-  hw2sw_o.data_in.value <= std_logic_vector(resize(unsigned(data_i), hw2sw_o.data_in.value'length));
+  hw2sw_o.data_in.value <= std_logic_vector(resize(unsigned(data_in_meta_r), hw2sw_o.data_in.value'length));
   hw2sw_o.data_in.we    <= '1';
+
+  -----------------------------------------------------------------------------
+  -- Input synchronizer
+  -----------------------------------------------------------------------------
+  -- data_i is asynchronous : 1st stage of the synchronizer, the data_in
+  -- register (written every cycle) is the 2nd stage
+  process(clk_i)
+  begin
+    if rising_edge(clk_i)
+    then
+      data_in_meta_r <= data_i;
+    end if;
+  end process;
 
   -----------------------------------------------------------------------------
   -- IP Output

@@ -56,7 +56,8 @@ architecture tb of tb_GPIO_vs_v1 is
   signal we_i             : std_logic;
   signal addr_i           : std_logic_vector (SIZE_ADDR-1 downto 0);
   signal wdata_i          : std_logic_vector (SIZE_DATA-1 downto 0);
-  signal data_i           : std_logic_vector (NB_IO-1     downto 0);
+  signal data_i           : std_logic_vector (NB_IO-1     downto 0) := (others => 'L');
+  signal data_i_r         : std_logic_vector (NB_IO-1     downto 0); -- data_i delayed for GPIO_v1
 
   signal rdata_o1         : std_logic_vector (SIZE_DATA-1 downto 0);
   signal busy_o1          : std_logic;
@@ -165,10 +166,20 @@ begin
    ,rdata_o          => rdata_o2 
    ,busy_o           => busy_o2  
 
-   ,data_i           => data_i   
+   ,data_i           => data_i_r 
    ,data_o           => data_o2  
    ,data_oe_o        => data_oe_o2     
    );
+
+  -- sbi_GPIO has a 2 FF input synchronizer, GPIO_v1 a single input register :
+  -- delay the GPIO_v1 input by one cycle to compare them cycle by cycle
+  process(clk_i)
+  begin
+    if rising_edge(clk_i)
+    then
+      data_i_r <= data_i;
+    end if;
+  end process;
 
   ------------------------------------------------
   -- Clock process

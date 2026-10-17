@@ -104,6 +104,7 @@ begin
     gpio_check(x"00"       , "Check GPIO output value"      , data_o   , error, C_SCOPE);
     gpio_check(x"00"       , "Check GPIO output enable mask", data_oe_o, error, C_SCOPE);
 
+    wait until rising_edge(clk_i); -- data_i 2 FF synchronizer (1st stage + data_in)
     wait until rising_edge(clk_i);
     sbi_check(GPIO_DATA    , x"A5", "Read data"    , clk_i, sbi_if);
     sbi_check(GPIO_DATA_OE , x"00", "Read data_oe" , clk_i, sbi_if);
