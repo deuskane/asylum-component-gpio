@@ -81,5 +81,22 @@
                 },
             ]
         },
+        {
+            name         : "data_out",
+            address      : "x4",
+            desc         : "GPIO Output (read-modify-write safe)",
+            swaccess     : "rw",
+            hwaccess     : "rw",
+            hwtype       : "ext",
+
+            fields: [
+                {
+                    name: "value",
+                    bits: "7:0",
+                    init: "d0",
+                    desc: "Output register of GPIO, for all lines"
+                },
+            ]
+        },
     ]
 }

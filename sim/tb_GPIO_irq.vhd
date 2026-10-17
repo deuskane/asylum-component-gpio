@@ -37,7 +37,7 @@ architecture sim of tb_GPIO_IRQ is
 
   constant C_SCOPE         : string := "TB_GPIO_IRQ";
   constant NB_IO           : natural := 4;
-  constant GPIO_ADDR_WIDTH : natural := 2;
+  constant GPIO_ADDR_WIDTH : natural := GPIO_IRQ_ADDR_WIDTH;
   constant GPIO_DATA_WIDTH : natural := 8;
   constant GPIO_OE_INIT    : std_logic_vector(GPIO_DATA_WIDTH-1 downto 0) := (others => '0');
   constant IRQ_POSEDGE     : std_logic_vector(GPIO_DATA_WIDTH-1 downto 0) := "00001010";
@@ -196,6 +196,26 @@ begin
     sbi_write(GPIO_IRQ_ISR, x"04", "Clear ISR after posedge", clk_i, sbi_if);
     sbi_check(GPIO_IRQ_ISR, x"00", "Check posedge ISR cleared", clk_i, sbi_if);
     check_value(it_o, '0', ERROR, "Check interrupt output cleared after ISR clear");
+
+    ------------------------------------------------
+    log(ID_LOG_HDR, "Read-modify-write on data_out with mixed directions", C_SCOPE);
+    ------------------------------------------------
+    sbi_write(GPIO_IRQ_IMR    , x"00", "Disable GPIO interrupts", clk_i, sbi_if);
+    sbi_write(GPIO_IRQ_DATA_OE, x"03", "Lines 1..0 output, 3..2 input", clk_i, sbi_if);
+    sbi_write(GPIO_IRQ_DATA   , x"00", "Write output value", clk_i, sbi_if);
+    gpio_set(x"C", "Drive input lines high", data_i, C_SCOPE);
+    wait until rising_edge(clk_i);
+    wait until rising_edge(clk_i);
+    sbi_check(GPIO_IRQ_DATA    , x"0C", "Read data (pins on input lines)", clk_i, sbi_if);
+    sbi_check(GPIO_IRQ_DATA_OUT, x"00", "Read data_out (output register)", clk_i, sbi_if);
+    -- DATA_OUT |= 1<<0
+    sbi_read (GPIO_IRQ_DATA_OUT, v_data, "Read data_out", clk_i, sbi_if);
+    sbi_write(GPIO_IRQ_DATA_OUT, v_data or x"01", "Set bit 0 of data_out", clk_i, sbi_if);
+    wait until rising_edge(clk_i);
+    gpio_check(x"1", "Check GPIO output value", data_o, error, C_SCOPE);
+    sbi_check(GPIO_IRQ_DATA_OUT, x"01", "Read data_out", clk_i, sbi_if);
+    sbi_write(GPIO_IRQ_DATA_OE, x"0F", "All lines output", clk_i, sbi_if);
+    sbi_check(GPIO_IRQ_DATA    , x"01", "Input lines did not get the pin value", clk_i, sbi_if);
 
     report "[TB_GPIO] All SBI GPIO checks passed";
     report_alert_counters(FINAL);

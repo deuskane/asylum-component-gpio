@@ -60,7 +60,7 @@ VLNV: `asylum:component:GPIO:1.7.1`
 This IP provides up to 8 general purpose I/O lines per instance. Each line has an output value, an output enable (direction) and an input value, all accessible through a small CSR bank on the SBI bus. Two bus wrappers are available:
 
 - **`sbi_GPIO`**: GPIO only (`GPIO_registers` + `GPIO_core`), registers `data`, `data_oe`, `data_in`, `data_out`; its `it_o` output is tied to `'0'`.
-- **`sbi_GPIO_irq`**: same pins and ports, plus rising / falling edge interrupts selected per line by generics (`GPIO_irq_registers` + `GPIO_irq_core` + `GIC_core`), registers `isr`, `imr`, `data`, `data_oe`.
+- **`sbi_GPIO_irq`**: same pins and ports, plus rising / falling edge interrupts selected per line by generics (`GPIO_irq_registers` + `GPIO_irq_core` + `GIC_core`), registers `isr`, `imr`, `data`, `data_oe`, `data_out`.
 
 The legacy implementation `GPIO_v1` (direct `cs/re/we` bus) is kept in `hdl/legacy/` as reference model for a comparison testbench.
 
@@ -152,7 +152,7 @@ use     asylum.gpio_pkg.all;
     );
 ```
 
-The CSR bank uses 2 address bits (`GPIO_ADDR_WIDTH = 2`) and 8-bit data (`GPIO_DATA_WIDTH = 8`), see `asylum.GPIO_csr_pkg` (`GPIO_IRQ_ADDR_WIDTH = 2`, `GPIO_IRQ_DATA_WIDTH = 8` in `asylum.GPIO_irq_csr_pkg` for `sbi_GPIO_irq`).
+The CSR bank uses 2 address bits (`GPIO_ADDR_WIDTH = 2`) and 8-bit data (`GPIO_DATA_WIDTH = 8`), see `asylum.GPIO_csr_pkg` (`GPIO_IRQ_ADDR_WIDTH = 3`, `GPIO_IRQ_DATA_WIDTH = 8` in `asylum.GPIO_irq_csr_pkg` for `sbi_GPIO_irq`).
 
 ## HDL Modules
 
@@ -191,7 +191,7 @@ The CSR bank uses 2 address bits (`GPIO_ADDR_WIDTH = 2`) and 8-bit data (`GPIO_D
 | `sbi_ini_i` | in | sbi_ini_t | SBI request |
 | `sbi_tgt_o` | out | sbi_tgt_t | SBI response |
 | `data_i` | in | std_logic_vector(NB_IO-1 downto 0) | Input values of the lines |
-| `data_o` | out | std_logic_vector(NB_IO-1 downto 0) | Output values (register written through `data`) |
+| `data_o` | out | std_logic_vector(NB_IO-1 downto 0) | Output values (register written through `data` or `data_out`) |
 | `data_oe_o` | out | std_logic_vector(NB_IO-1 downto 0) | Output enables, 1 = output |
 | `it_o` | out | std_logic | Interrupt request: OR of the `isr` bits |
 
@@ -234,10 +234,10 @@ The CSR bank uses 2 address bits (`GPIO_ADDR_WIDTH = 2`) and 8-bit data (`GPIO_D
 | `cke_i` | in | std_logic | Clock enable (not used) |
 | `arstn_i` | in | std_logic | Asynchronous reset, active low (output register) |
 | `data_i` | in | std_logic_vector(NB_IO-1 downto 0) | Pin inputs |
-| `data_o` | out | std_logic_vector(NB_IO-1 downto 0) | Output register, loaded on a software write of `data` |
+| `data_o` | out | std_logic_vector(NB_IO-1 downto 0) | Output register, loaded on a software write of `data` or `data_out` |
 | `data_oe_o` | out | std_logic_vector(NB_IO-1 downto 0) | `data_oe` register value |
 | `sw2hw_i` | in | GPIO_irq_sw2hw_t | Register values from `GPIO_irq_registers` |
-| `hw2sw_o` | out | GPIO_irq_hw2sw_t | `data` read value and next `isr` value |
+| `hw2sw_o` | out | GPIO_irq_hw2sw_t | `data` and `data_out` read values and next `isr` value |
 | `it_o` | out | std_logic | Merged interrupt from `GIC_core` |
 
 ### GPIO_v1
@@ -281,7 +281,7 @@ Notes:
 
 - The reset value of `data_oe` is the `DATA_OE_INIT` generic in both blocks.
 - `GPIO`: `data` is an external register (`hwtype: ext`) whose read value is computed by `GPIO_core`; writes to `data` are aliased to `data_out` (`alias_write`). `data_in` is written by hardware every cycle.
-- `GPIO_irq`: there is no `data_in` / `data_out` register; `data` reads the masked pin / output value and writes load the output register of `GPIO_irq_core`. `isr` is rw1c, `imr` resets to 0.
+- `GPIO_irq`: there is no `data_in` register; `data` reads the masked pin / output value; `data_out` (external register) reads the output register of `GPIO_irq_core` for all lines; writes to `data` or `data_out` load this output register. Use `data_out` for a read-modify-write: on `data`, it would copy the pin value of the input lines into their output register. `isr` is rw1c, `imr` resets to 0.
 
 ## Verification
 
@@ -290,7 +290,7 @@ Notes:
 | File | DUT | Description |
 |------|-----|-------------|
 | [sim/tb_GPIO.vhd](sim/tb_GPIO.vhd) | `sbi_GPIO` | UVVM testbench with the SBI VIP and GPIO VIP (`bitvis_vip_gpio`), 8 lines, `DATA_OE_INIT = 0`. Checks the post-reset state (outputs 0, `data` / `data_in` follow the input 0xA5), output mode (`data_oe = 0xFF`, write 0x21 to `data`, check pins and the 4 registers) and input mode (`data_oe = 0`, `data` / `data_in` follow the input 0x3C, `data_out` kept) |
-| [sim/tb_GPIO_irq.vhd](sim/tb_GPIO_irq.vhd) | `sbi_GPIO_irq` | UVVM testbench, `NB_IO = 4`, `IRQ_POSEDGE = 0x0A`, `IRQ_NEGEDGE = 0x0C`. Same data / direction checks on `data` and `data_oe`, then interrupts: rising edge on line 1 with only line 0 unmasked (no interrupt, `isr = 0`), rising edge on line 1 with `imr = 0x02` (`it_o = 1`, `isr = 0x02`, cleared by writing 1), falling edge on line 2 with `imr = 0x04` (`isr = 0x04`, cleared) |
+| [sim/tb_GPIO_irq.vhd](sim/tb_GPIO_irq.vhd) | `sbi_GPIO_irq` | UVVM testbench, `NB_IO = 4`, `IRQ_POSEDGE = 0x0A`, `IRQ_NEGEDGE = 0x0C`. Same data / direction checks on `data` and `data_oe`, then interrupts: rising edge on line 1 with only line 0 unmasked (no interrupt, `isr = 0`), rising edge on line 1 with `imr = 0x02` (`it_o = 1`, `isr = 0x02`, cleared by writing 1), falling edge on line 2 with `imr = 0x04` (`isr = 0x04`, cleared), then a read-modify-write of `data_out` with lines 1..0 as outputs and 3..2 as inputs driven high (the input lines keep output value 0) |
 | [sim/tb_GPIO_vs_v1.vhd](sim/tb_GPIO_vs_v1.vhd) | `sbi_GPIO` + `GPIO_v1` | Lock-step comparison: both instances get the same bus accesses and pin inputs and `rdata`, `busy`, `data_o`, `data_oe_o` are compared on every falling clock edge (`severity failure`). Sequence: output mode, walking-one writes to `data`, input mode, walking-one on `data_i` with reads of `data`; ends with `Test OK` |
 
 ### Targets

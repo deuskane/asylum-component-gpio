@@ -84,6 +84,11 @@ begin
                             (data_in  and not sw2hw_i.data_oe .value));
   hw2sw_o.data.we       <= '1';
 
+  -- data_out reads the output register of all lines : a read-modify-write
+  -- on data_out does not copy the input pins into the output register
+  hw2sw_o.data_out.value <= data_out;
+  hw2sw_o.data_out.we    <= '1';
+
   -----------------------------------------------------------------------------
   -- Data output register
   -----------------------------------------------------------------------------
@@ -97,6 +102,9 @@ begin
       if (sw2hw_i.data.we = '1') 
       then
         data_out_r <= sw2hw_i.data.value(data_out_r'range);
+      elsif (sw2hw_i.data_out.we = '1') 
+      then
+        data_out_r <= sw2hw_i.data_out.value(data_out_r'range);
       end if;
     end if;
   end process;

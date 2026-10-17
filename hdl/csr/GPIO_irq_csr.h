@@ -59,6 +59,19 @@
 #define GPIO_IRQ_DATA_OE_VALUE      0
 #define GPIO_IRQ_DATA_OE_VALUE_MASK 255
 
+//==================================
+// Register    : data_out
+// Description : GPIO Output (read-modify-write safe)
+// Address     : 0x4
+//==================================
+#define GPIO_IRQ_DATA_OUT 0x4
+
+// Field       : data_out.value
+// Description : Output register of GPIO, for all lines
+// Range       : [7:0]
+#define GPIO_IRQ_DATA_OUT_VALUE      0
+#define GPIO_IRQ_DATA_OUT_VALUE_MASK 255
+
 //----------------------------------
 // Structure GPIO_irq_t
 //----------------------------------
@@ -67,6 +80,7 @@ typedef struct {
   uint8_t imr; // 0x1
   uint8_t data; // 0x2
   uint8_t data_oe; // 0x3
+  uint8_t data_out; // 0x4
 } GPIO_irq_t;
 
 #endif // GPIO_IRQ_REGISTERS_H

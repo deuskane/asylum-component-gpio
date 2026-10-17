@@ -18,7 +18,7 @@ package GPIO_irq_csr_pkg is
   -- Global Constants
   ------------------------------------
 
-  constant GPIO_IRQ_ADDR_WIDTH : natural := 2;
+  constant GPIO_IRQ_ADDR_WIDTH : natural := 3;
   constant GPIO_IRQ_DATA_WIDTH : natural := 8;
 
   --==================================
@@ -129,6 +129,38 @@ package GPIO_irq_csr_pkg is
     value : std_logic_vector(8-1 downto 0);
   end record GPIO_irq_data_oe_sw2hw_t;
 
+  --==================================
+  -- Register    : data_out
+  -- Description : GPIO Output (read-modify-write safe)
+  -- Address     : 0x4
+  -- Width       : 8
+  -- Sw Access   : rw
+  -- Hw Access   : rw
+  -- Hw Type     : ext
+  --==================================
+  constant GPIO_IRQ_DATA_OUT : unsigned(GPIO_IRQ_ADDR_WIDTH-1 downto 0) := to_unsigned(4, GPIO_IRQ_ADDR_WIDTH);
+
+  type GPIO_irq_data_out_sw2hw_t is record
+    re : std_logic;
+    we : std_logic;
+  --==================================
+  -- Field       : value
+  -- Description : Output register of GPIO, for all lines
+  -- Width       : 8
+  --==================================
+    value : std_logic_vector(8-1 downto 0);
+  end record GPIO_irq_data_out_sw2hw_t;
+
+  type GPIO_irq_data_out_hw2sw_t is record
+    we : std_logic;
+  --==================================
+  -- Field       : value
+  -- Description : Output register of GPIO, for all lines
+  -- Width       : 8
+  --==================================
+    value : std_logic_vector(8-1 downto 0);
+  end record GPIO_irq_data_out_hw2sw_t;
+
   ------------------------------------
   -- Structure GPIO_irq_t
   ------------------------------------
@@ -137,11 +169,13 @@ package GPIO_irq_csr_pkg is
     imr : GPIO_irq_imr_sw2hw_t;
     data : GPIO_irq_data_sw2hw_t;
     data_oe : GPIO_irq_data_oe_sw2hw_t;
+    data_out : GPIO_irq_data_out_sw2hw_t;
   end record GPIO_irq_sw2hw_t;
 
   type GPIO_irq_hw2sw_t is record
     isr : GPIO_irq_isr_hw2sw_t;
     data : GPIO_irq_data_hw2sw_t;
+    data_out : GPIO_irq_data_out_hw2sw_t;
   end record GPIO_irq_hw2sw_t;
 
   ------------------------------------

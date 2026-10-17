@@ -139,6 +139,28 @@ architecture rtl of GPIO_irq_registers is
   signal   data_oe_rdata_hw  : std_logic_vector(8-1 downto 0);
   signal   data_oe_rbusy     : std_logic;
 
+  function INIT_data_out
+    return std_logic_vector is
+    variable tmp : std_logic_vector(8-1 downto 0);
+  begin  -- function INIT_data_out
+    tmp(7 downto 0) := "00000000"; -- value
+    return tmp;
+  end function INIT_data_out;
+
+  signal   data_out_wcs       : std_logic;
+  signal   data_out_we        : std_logic;
+  signal   data_out_wdata     : std_logic_vector(8-1 downto 0);
+  signal   data_out_wdata_sw  : std_logic_vector(8-1 downto 0);
+  signal   data_out_wdata_hw  : std_logic_vector(8-1 downto 0);
+  signal   data_out_wbusy     : std_logic;
+
+  signal   data_out_rcs       : std_logic;
+  signal   data_out_re        : std_logic;
+  signal   data_out_rdata     : std_logic_vector(8-1 downto 0);
+  signal   data_out_rdata_sw  : std_logic_vector(8-1 downto 0);
+  signal   data_out_rdata_hw  : std_logic_vector(8-1 downto 0);
+  signal   data_out_rbusy     : std_logic;
+
 begin  -- architecture rtl
 
   -- Interface 
@@ -449,23 +471,98 @@ begin  -- architecture rtl
     sw2hw_o.data_oe.we <= '0';
   end generate gen_data_oe_b;
 
+  gen_data_out: if (True)
+  generate
+  --==================================
+  -- Register    : data_out
+  -- Description : GPIO Output (read-modify-write safe)
+  -- Address     : 0x4
+  -- Width       : 8
+  -- Sw Access   : rw
+  -- Hw Access   : rw
+  -- Hw Type     : ext
+  --==================================
+  --==================================
+  -- Field       : value
+  -- Description : Output register of GPIO, for all lines
+  -- Width       : 8
+  --==================================
+
+
+    data_out_rcs     <= '1' when (sig_raddr = GPIO_irq_DATA_OUT) else '0';
+    data_out_re      <= sig_rcs and sig_re and data_out_rcs;
+    data_out_rdata   <= (
+      0 => data_out_rdata_sw(0), -- value(0)
+      1 => data_out_rdata_sw(1), -- value(1)
+      2 => data_out_rdata_sw(2), -- value(2)
+      3 => data_out_rdata_sw(3), -- value(3)
+      4 => data_out_rdata_sw(4), -- value(4)
+      5 => data_out_rdata_sw(5), -- value(5)
+      6 => data_out_rdata_sw(6), -- value(6)
+      7 => data_out_rdata_sw(7), -- value(7)
+      others => '0');
+
+    data_out_wcs     <= '1' when       (sig_waddr = GPIO_irq_DATA_OUT)   else '0';
+    data_out_we      <= sig_wcs and sig_we and data_out_wcs;
+    data_out_wdata   <= sig_wdata;
+    data_out_wdata_sw(7 downto 0) <= data_out_wdata(7 downto 0); -- value
+    data_out_wdata_hw(7 downto 0) <= hw2sw_i.data_out.value; -- value
+    sw2hw_o.data_out.value <= data_out_rdata_hw(7 downto 0); -- value
+
+    ins_data_out : csr_ext
+      generic map
+        (WIDTH         => 8
+        )
+      port map
+        (clk_i         => clk_i
+        ,arst_b_i      => arst_b_i
+        ,sw_wd_i       => data_out_wdata_sw
+        ,sw_rd_o       => data_out_rdata_sw
+        ,sw_we_i       => data_out_we
+        ,sw_re_i       => data_out_re
+        ,sw_rbusy_o    => data_out_rbusy
+        ,sw_wbusy_o    => data_out_wbusy
+        ,hw_wd_i       => data_out_wdata_hw
+        ,hw_rd_o       => data_out_rdata_hw
+        ,hw_we_i       => hw2sw_i.data_out.we
+        ,hw_sw_re_o    => sw2hw_o.data_out.re
+        ,hw_sw_we_o    => sw2hw_o.data_out.we
+        );
+
+  end generate gen_data_out;
+
+  gen_data_out_b: if not (True)
+  generate
+    data_out_rcs     <= '0';
+    data_out_rbusy   <= '0';
+    data_out_rdata   <= (others => '0');
+    data_out_wcs      <= '0';
+    data_out_wbusy    <= '0';
+    sw2hw_o.data_out.value <= "00000000";
+    sw2hw_o.data_out.re <= '0';
+    sw2hw_o.data_out.we <= '0';
+  end generate gen_data_out_b;
+
   sig_wbusy <= 
     isr_wbusy when isr_wcs = '1' else
     imr_wbusy when imr_wcs = '1' else
     data_wbusy when data_wcs = '1' else
     data_oe_wbusy when data_oe_wcs = '1' else
+    data_out_wbusy when data_out_wcs = '1' else
     '0'; -- Bad Address, no busy
   sig_rbusy <= 
     isr_rbusy when isr_rcs = '1' else
     imr_rbusy when imr_rcs = '1' else
     data_rbusy when data_rcs = '1' else
     data_oe_rbusy when data_oe_rcs = '1' else
+    data_out_rbusy when data_out_rcs = '1' else
     '0'; -- Bad Address, no busy
   sig_rdata <= 
     isr_rdata when isr_rcs = '1' else
     imr_rdata when imr_rcs = '1' else
     data_rdata when data_rcs = '1' else
     data_oe_rdata when data_oe_rcs = '1' else
+    data_out_rdata when data_out_rcs = '1' else
     (others => '0'); -- Bad Address, return 0
 
   gen_tgt_info_name : if MODULE_NAME = ""

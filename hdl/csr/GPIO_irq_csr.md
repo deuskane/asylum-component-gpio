@@ -7,6 +7,7 @@ CSR for General Purpose I/O
 |0x1|imr|
 |0x2|data|
 |0x3|data_oe|
+|0x4|data_out|
 
 ## 0x0 isr
 Interruption Status Register
@@ -31,4 +32,10 @@ GPIO Direction
 
 ### [7:0] value
 GPIO Direction : 0 input, 1 output
+
+## 0x4 data_out
+GPIO Output (read-modify-write safe)
+
+### [7:0] value
+Output register of GPIO, for all lines
 
