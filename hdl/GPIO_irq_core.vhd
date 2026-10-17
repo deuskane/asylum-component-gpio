@@ -64,6 +64,8 @@ architecture rtl of GPIO_irq_core is
   signal data_in_negedge : std_logic_vector (CSR_DATA_WIDTH-1 downto 0);
 
   signal gic_it          : std_logic_vector (CSR_DATA_WIDTH-1 downto 0);
+  signal its             : std_logic_vector (CSR_DATA_WIDTH-1 downto 0);
+  signal its_hold_r      : std_logic_vector (CSR_DATA_WIDTH-1 downto 0);
 
   signal data_in_r       : std_logic_vector (CSR_DATA_WIDTH-1 downto 0);
   signal data_out_r      : std_logic_vector (NB_IO         -1 downto 0);
@@ -121,12 +123,32 @@ begin
   gic_it                <= ((data_in_posedge and IRQ_POSEDGE) or 
                             (data_in_negedge and IRQ_NEGEDGE));
 
+  -- A software W1C of isr wins over an edge of the same cycle (csr_reg rw1c :
+  -- q_next = d_hw and not wd), and an edge lasts one cycle : the event is lost.
+  -- Replay the events of the write cycle in the next cycle (sw2hw_i.isr.we is
+  -- the registered write strobe). its_hold_r keeps its, not gic_it, so an
+  -- event cleared again by a back-to-back write is replayed again. The bits
+  -- which were not cleared are already set in isr : no effect on them.
+  its                   <= gic_it or its_hold_r when sw2hw_i.isr.we = '1' else
+                           gic_it;
+
+  process(clk_i, arstn_i)
+  begin
+    if arstn_i = '0'
+    then
+      its_hold_r <= (others => '0');
+    elsif rising_edge(clk_i)
+    then
+      its_hold_r <= its;
+    end if;
+  end process;
+
   hw2sw_o.isr.we        <= '1';
   
   ins_GIC_core : GIC_core
   port map(
     itm_o     => it_o              ,
-    its_i     => gic_it            ,
+    its_i     => its               ,
     isr_i     => sw2hw_i.isr.value ,
     isr_o     => hw2sw_o.isr.value ,
     imr_i     => sw2hw_i.imr.enable

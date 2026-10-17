@@ -42,6 +42,7 @@ architecture sim of tb_GPIO_IRQ is
   constant GPIO_OE_INIT    : std_logic_vector(GPIO_DATA_WIDTH-1 downto 0) := (others => '0');
   constant IRQ_POSEDGE     : std_logic_vector(GPIO_DATA_WIDTH-1 downto 0) := "00001010";
   constant IRQ_NEGEDGE     : std_logic_vector(GPIO_DATA_WIDTH-1 downto 0) := "00001100";
+  constant C_CLK_PERIOD    : time    := 20 ns;
 
   signal clk_i             : std_logic := '0';
   signal clk_ena           : boolean   := true;
@@ -60,12 +61,13 @@ architecture sim of tb_GPIO_IRQ is
   signal data_o            : std_logic_vector(NB_IO-1 downto 0);
   signal data_oe_o         : std_logic_vector(NB_IO-1 downto 0);
   signal it_o              : std_logic;
+  signal it_isr_wr         : std_logic := '0'; -- it_o during the last isr write
 
 begin
 
   arstn_i <= '0', '1' after 100 ns;
 
-  clock_generator(clk_i, clk_ena, 20 ns, "TB Clock");
+  clock_generator(clk_i, clk_ena, C_CLK_PERIOD, "TB Clock");
 
   ins_dut : sbi_GPIO_IRQ
     generic map (
@@ -93,6 +95,19 @@ begin
   sbi_ini.wdata                            <= sbi_if.wdata(GPIO_DATA_WIDTH-1 downto 0);
   sbi_if.ready                             <= sbi_tgt.ready;
   sbi_if.rdata(GPIO_DATA_WIDTH-1 downto 0) <= sbi_tgt.rdata;
+
+  -- it_o in the cycle of an isr write : was an event already in isr before
+  -- the W1C ?
+  process(clk_i)
+  begin
+    if rising_edge(clk_i)
+    then
+      if sbi_ini.cs = '1' and sbi_ini.we = '1' and unsigned(sbi_ini.addr) = GPIO_IRQ_ISR
+      then
+        it_isr_wr <= it_o;
+      end if;
+    end if;
+  end process;
 
   process
     variable v_data : std_logic_vector(GPIO_DATA_WIDTH-1 downto 0);
@@ -196,6 +211,39 @@ begin
     sbi_write(GPIO_IRQ_ISR, x"04", "Clear ISR after posedge", clk_i, sbi_if);
     sbi_check(GPIO_IRQ_ISR, x"00", "Check posedge ISR cleared", clk_i, sbi_if);
     check_value(it_o, '0', ERROR, "Check interrupt output cleared after ISR clear");
+
+    ------------------------------------------------
+    log(ID_LOG_HDR, "Test posedge GPIO[1] around a W1C of isr", C_SCOPE);
+    ------------------------------------------------
+    -- The rising edge is launched from 4 cycles before to 3 cycles after the
+    -- W1C write : one k makes it coincide with the write cycle, whatever the
+    -- input latency (0 to 4 cycles). The event must never be
+    -- lost : either it was in isr before the write (it_o = 1 during the write,
+    -- the W1C clears it), or it is in isr after the write.
+    sbi_write(GPIO_IRQ_IMR, x"02", "Enable GPIO interrupt", clk_i, sbi_if);
+
+    for k in 0 to 7
+    loop
+      gpio_set(x"0", "Clear GPIO input", data_i, C_SCOPE);
+      wait_num_rising_edge(clk_i, 8);
+      sbi_write(GPIO_IRQ_ISR, x"FF", "Clear ISR", clk_i, sbi_if);
+      sbi_check(GPIO_IRQ_ISR, x"00", "Check ISR cleared", clk_i, sbi_if);
+
+      data_i <= "0010" after k * C_CLK_PERIOD;
+      wait_num_rising_edge(clk_i, 4);
+      sbi_write(GPIO_IRQ_ISR, x"02", "Clear ISR bit 1 (k="&to_string(k)&")", clk_i, sbi_if);
+      wait_num_rising_edge(clk_i, 8);
+
+      if it_isr_wr = '1'
+      then
+        log(ID_SEQUENCER, "k="&to_string(k)&" : event in isr before the W1C, cleared", C_SCOPE);
+        sbi_check(GPIO_IRQ_ISR, x"00", "Check ISR cleared by the W1C", clk_i, sbi_if);
+      else
+        log(ID_SEQUENCER, "k="&to_string(k)&" : event during or after the W1C, kept", C_SCOPE);
+        sbi_check(GPIO_IRQ_ISR, x"02", "Check edge not lost by the W1C", clk_i, sbi_if);
+      end if;
+    end loop;
+    sbi_write(GPIO_IRQ_ISR, x"FF", "Clear ISR", clk_i, sbi_if);
 
     report "[TB_GPIO] All SBI GPIO checks passed";
     report_alert_counters(FINAL);
