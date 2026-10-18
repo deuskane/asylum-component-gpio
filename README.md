@@ -297,7 +297,7 @@ Notes:
 
 | Target | Toplevel | Description |
 |--------|----------|-------------|
-| `default` | `sbi_GPIO` | HDL fileset + generation of both CSR blocks (not a simulation) |
+| `default` | `GPIO_top` | HDL fileset + generation of both CSR blocks, elaboration of `syn/GPIO_top.vhd` (`sbi_GPIO` and `sbi_GPIO_irq` with constrained ports; not a simulation) |
 | `sim_testcase` | `tb_GPIO` | Simulation of `sbi_GPIO` with VIP |
 | `sim_testcase_irq` | `tb_GPIO_irq` | Simulation of `sbi_GPIO_irq` with VIP |
 | `sim_testcase_vs_v1` | `tb_GPIO_vs_v1` | Simulation of `sbi_GPIO` against `GPIO_v1` |
@@ -324,7 +324,7 @@ fusesoc --cores-root . run --build-root build --target sim_testcase_irq asylum:c
 
 ## Synthesis
 
-No dedicated synthesis target. The HDL sources of the `default` target (`hdl/*.vhd` + generated CSR) contain no simulation-only construct and are synthesizable; `hdl/legacy/GPIO_v1.vhd` is only part of the `sim` fileset. Resource usage is small and set by `NB_IO` (the CSR registers are always 8 bits wide). `data_i` is not synchronized inside the IP (one register stage in `data_in` for `sbi_GPIO`, direct combinational read path and edge detector in `sbi_GPIO_irq`); synchronize asynchronous inputs at the chip / FPGA top level.
+No dedicated synthesis target. The HDL sources of the `default` target (`hdl/*.vhd` + generated CSR, VHDL-2008) contain no simulation-only construct and are synthesizable; [syn/GPIO_top.vhd](syn/GPIO_top.vhd) gives a toplevel with flat, constrained ports (`sbi_GPIO` and `sbi_GPIO_irq` have unconstrained SBI ports and cannot be a toplevel); `hdl/legacy/GPIO_v1.vhd` is only part of the `sim` fileset. Resource usage is small and set by `NB_IO` (the CSR registers are always 8 bits wide). `data_i` is not synchronized inside the IP (one register stage in `data_in` for `sbi_GPIO`, direct combinational read path and edge detector in `sbi_GPIO_irq`); synchronize asynchronous inputs at the chip / FPGA top level.
 
 ## Design Notes
 
@@ -379,6 +379,8 @@ asylum-component-gpio/
 │       ├── GPIO_irq_csr_pkg.vhd # Generated
 │       ├── GPIO_irq_csr.md      # Generated
 │       └── GPIO_irq_csr.h       # Generated
+├── syn/
+│   └── GPIO_top.vhd        # Constrained toplevel of the default target
 └── sim/
     ├── tb_GPIO.vhd         # UVVM testbench of sbi_GPIO
     ├── tb_GPIO_irq.vhd     # UVVM testbench of sbi_GPIO_irq

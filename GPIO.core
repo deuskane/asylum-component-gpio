@@ -69,12 +69,19 @@ filesets:
       - hdl/sbi_GPIO.vhd
       - hdl/GPIO_irq_core.vhd
       - hdl/sbi_GPIO_irq.vhd
-    file_type    : vhdlSource
+    file_type    : vhdlSource-2008
     logical_name : asylum
     depend       :
       - asylum:system:GIC
       - asylum:utils:generators
       - asylum:utils:pkg
+
+  #---------------------------------------
+  top:
+  #---------------------------------------
+    files:
+      - syn/GPIO_top.vhd
+    file_type : vhdlSource-2008
 
   #---------------------------------------
   sim:
@@ -98,7 +105,8 @@ targets:
     description     : Default Target
     filesets        :
       - hdl
-    toplevel        : sbi_GPIO
+      - top
+    toplevel        : GPIO_top
     default_tool    : ghdl
     generate        :
       - gen_csr
