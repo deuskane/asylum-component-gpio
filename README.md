@@ -301,6 +301,8 @@ Notes:
 | `sim_testcase` | `tb_GPIO` | Simulation of `sbi_GPIO` with VIP |
 | `sim_testcase_irq` | `tb_GPIO_irq` | Simulation of `sbi_GPIO_irq` with VIP |
 | `sim_testcase_vs_v1` | `tb_GPIO_vs_v1` | Simulation of `sbi_GPIO` against `GPIO_v1` |
+| `lint_ghdl` | `sbi_GPIO_synth_top` | Lint: GHDL `-Wall` analysis and elaboration (empty simulation) of `sbi_GPIO` and `sbi_GPIO_irq` in a wrapper with flat SBI ports (`syn/ghdl/sbi_GPIO_synth_top.vhd`) |
+| `lint_ghdl_synth` | `sbi_GPIO_synth_top` | Synthesis check: `lint_ghdl`, then `ghdl --synth -Wall` of 3 configurations (`syn/ghdl/ghdl_synth.sh`: defaults (`DATA_OE_INIT = x"00"`, `IRQ_* = x"FF"`, PicoSoC switches), PicoSoC LEDs (`DATA_OE_INIT = x"FF"`, `IRQ_* = x"00"`), `NB_IO = 4` with the edges of `tb_GPIO_irq`), fails on a synthesis error or an inferred latch |
 
 ### How to Run
 
@@ -311,6 +313,8 @@ make help                 # variables, rules and target list (mk/targets.txt)
 make sim_testcase         # run one target (log in log/)
 make nonreg_sim           # run every sim_* target
 make TARGETS_FILTER=irq nonreg_sim   # run a filtered subset
+make lint_ghdl            # GHDL -Wall lint (make nonreg_lint: every lint_* target)
+make lint_ghdl_synth      # GHDL -Wall lint + ghdl --synth -Wall check
 make clean                # remove build/ and log/
 ```
 
@@ -324,7 +328,9 @@ fusesoc --cores-root . run --build-root build --target sim_testcase_irq asylum:c
 
 ## Synthesis
 
-No dedicated synthesis target. The HDL sources of the `default` target (`hdl/*.vhd` + generated CSR) contain no simulation-only construct and are synthesizable; `hdl/legacy/GPIO_v1.vhd` is only part of the `sim` fileset. Resource usage is small and set by `NB_IO` (the CSR registers are always 8 bits wide). `data_i` is not synchronized inside the IP (one register stage in `data_in` for `sbi_GPIO`, direct combinational read path and edge detector in `sbi_GPIO_irq`); synchronize asynchronous inputs at the chip / FPGA top level.
+No vendor synthesis target (`lint_ghdl_synth` checks the RTL with `ghdl --synth`, see [Targets](#targets)). The HDL sources of the `default` target (`hdl/*.vhd` + generated CSR) contain no simulation-only construct; `hdl/legacy/GPIO_v1.vhd` is only part of the `sim` fileset. Resource usage is small and set by `NB_IO` (the CSR registers are always 8 bits wide). `data_i` is not synchronized inside the IP (one register stage in `data_in` for `sbi_GPIO`, direct combinational read path and edge detector in `sbi_GPIO_irq`); synchronize asynchronous inputs at the chip / FPGA top level.
+
+`lint_ghdl_synth` currently fails on `sbi_GPIO`: the generated `GPIO_csr.vhd` drives `data_wbusy` and `data_in_wbusy` twice (`<= '0'` and the `sw_wbusy_o` port of the `csr_ext` / `csr_reg` instance, regtool output for a register without software write access: `data` written through its `data_out` alias, read-only `data_in`); `ghdl --synth` rejects the multiple assignments. `sbi_GPIO_irq` alone passes.
 
 ## Design Notes
 
@@ -379,10 +385,13 @@ asylum-component-gpio/
 │       ├── GPIO_irq_csr_pkg.vhd # Generated
 │       ├── GPIO_irq_csr.md      # Generated
 │       └── GPIO_irq_csr.h       # Generated
-└── sim/
-    ├── tb_GPIO.vhd         # UVVM testbench of sbi_GPIO
-    ├── tb_GPIO_irq.vhd     # UVVM testbench of sbi_GPIO_irq
-    └── tb_GPIO_vs_v1.vhd   # Comparison sbi_GPIO / GPIO_v1
+├── sim/
+│   ├── tb_GPIO.vhd         # UVVM testbench of sbi_GPIO
+│   ├── tb_GPIO_irq.vhd     # UVVM testbench of sbi_GPIO_irq
+│   └── tb_GPIO_vs_v1.vhd   # Comparison sbi_GPIO / GPIO_v1
+└── syn/ghdl/
+    ├── sbi_GPIO_synth_top.vhd  # Lint / synthesis check top (sbi_GPIO + sbi_GPIO_irq, flat SBI ports)
+    └── ghdl_synth.sh       # ghdl --synth check (post_run hook of lint_ghdl_synth)
 ```
 
 ## Dependencies

@@ -1,4 +1,6 @@
 default            : Default Target
+lint_ghdl          : Lint with GHDL (-Wall analysis and elaboration of sbi_GPIO_synth_top)
+lint_ghdl_synth    : Synthesis check, ghdl --synth -Wall of sbi_GPIO_synth_top (3 configurations)
 sim_testcase       : Simulation of sbi_GPIO with VIP
 sim_testcase_irq   : Simulation of sbi_GPIO_irq with VIP
 sim_testcase_vs_v1 : Simulation of sb_GPIO against GPIO_v1
