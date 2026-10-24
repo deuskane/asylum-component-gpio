@@ -85,7 +85,6 @@ architecture rtl of GPIO_irq_registers is
   signal   imr_we        : std_logic;
   signal   imr_wdata     : std_logic_vector(8-1 downto 0);
   signal   imr_wdata_sw  : std_logic_vector(8-1 downto 0);
-  signal   imr_wdata_hw  : std_logic_vector(8-1 downto 0);
   signal   imr_wbusy     : std_logic;
 
   signal   imr_rcs       : std_logic;
@@ -94,14 +93,6 @@ architecture rtl of GPIO_irq_registers is
   signal   imr_rdata_sw  : std_logic_vector(8-1 downto 0);
   signal   imr_rdata_hw  : std_logic_vector(8-1 downto 0);
   signal   imr_rbusy     : std_logic;
-
-  function INIT_data
-    return std_logic_vector is
-    variable tmp : std_logic_vector(8-1 downto 0);
-  begin  -- function INIT_data
-    tmp(7 downto 0) := "00000000"; -- value
-    return tmp;
-  end function INIT_data;
 
   signal   data_wcs       : std_logic;
   signal   data_we        : std_logic;
@@ -129,7 +120,6 @@ architecture rtl of GPIO_irq_registers is
   signal   data_oe_we        : std_logic;
   signal   data_oe_wdata     : std_logic_vector(8-1 downto 0);
   signal   data_oe_wdata_sw  : std_logic_vector(8-1 downto 0);
-  signal   data_oe_wdata_hw  : std_logic_vector(8-1 downto 0);
   signal   data_oe_wbusy     : std_logic;
 
   signal   data_oe_rcs       : std_logic;
@@ -178,15 +168,15 @@ begin  -- architecture rtl
     isr_rcs     <= '1' when (sig_raddr = GPIO_irq_ISR) else '0';
     isr_re      <= sig_rcs and sig_re and isr_rcs;
     isr_rdata   <= (
-      0 => isr_rdata_sw(0), -- value(0)
-      1 => isr_rdata_sw(1), -- value(1)
-      2 => isr_rdata_sw(2), -- value(2)
-      3 => isr_rdata_sw(3), -- value(3)
-      4 => isr_rdata_sw(4), -- value(4)
-      5 => isr_rdata_sw(5), -- value(5)
-      6 => isr_rdata_sw(6), -- value(6)
-      7 => isr_rdata_sw(7), -- value(7)
-      others => '0');
+       0 => isr_rdata_sw(0) -- value(0)
+      ,1 => isr_rdata_sw(1) -- value(1)
+      ,2 => isr_rdata_sw(2) -- value(2)
+      ,3 => isr_rdata_sw(3) -- value(3)
+      ,4 => isr_rdata_sw(4) -- value(4)
+      ,5 => isr_rdata_sw(5) -- value(5)
+      ,6 => isr_rdata_sw(6) -- value(6)
+      ,7 => isr_rdata_sw(7) -- value(7)
+      );
 
     isr_wcs     <= '1' when       (sig_waddr = GPIO_irq_ISR)   else '0';
     isr_we      <= sig_wcs and sig_we and isr_wcs;
@@ -252,15 +242,15 @@ begin  -- architecture rtl
     imr_rcs     <= '1' when (sig_raddr = GPIO_irq_IMR) else '0';
     imr_re      <= sig_rcs and sig_re and imr_rcs;
     imr_rdata   <= (
-      0 => imr_rdata_sw(0), -- enable(0)
-      1 => imr_rdata_sw(1), -- enable(1)
-      2 => imr_rdata_sw(2), -- enable(2)
-      3 => imr_rdata_sw(3), -- enable(3)
-      4 => imr_rdata_sw(4), -- enable(4)
-      5 => imr_rdata_sw(5), -- enable(5)
-      6 => imr_rdata_sw(6), -- enable(6)
-      7 => imr_rdata_sw(7), -- enable(7)
-      others => '0');
+       0 => imr_rdata_sw(0) -- enable(0)
+      ,1 => imr_rdata_sw(1) -- enable(1)
+      ,2 => imr_rdata_sw(2) -- enable(2)
+      ,3 => imr_rdata_sw(3) -- enable(3)
+      ,4 => imr_rdata_sw(4) -- enable(4)
+      ,5 => imr_rdata_sw(5) -- enable(5)
+      ,6 => imr_rdata_sw(6) -- enable(6)
+      ,7 => imr_rdata_sw(7) -- enable(7)
+      );
 
     imr_wcs     <= '1' when       (sig_waddr = GPIO_irq_IMR)   else '0';
     imr_we      <= sig_wcs and sig_we and imr_wcs;
@@ -325,15 +315,15 @@ begin  -- architecture rtl
     data_rcs     <= '1' when (sig_raddr = GPIO_irq_DATA) else '0';
     data_re      <= sig_rcs and sig_re and data_rcs;
     data_rdata   <= (
-      0 => data_rdata_sw(0), -- value(0)
-      1 => data_rdata_sw(1), -- value(1)
-      2 => data_rdata_sw(2), -- value(2)
-      3 => data_rdata_sw(3), -- value(3)
-      4 => data_rdata_sw(4), -- value(4)
-      5 => data_rdata_sw(5), -- value(5)
-      6 => data_rdata_sw(6), -- value(6)
-      7 => data_rdata_sw(7), -- value(7)
-      others => '0');
+       0 => data_rdata_sw(0) -- value(0)
+      ,1 => data_rdata_sw(1) -- value(1)
+      ,2 => data_rdata_sw(2) -- value(2)
+      ,3 => data_rdata_sw(3) -- value(3)
+      ,4 => data_rdata_sw(4) -- value(4)
+      ,5 => data_rdata_sw(5) -- value(5)
+      ,6 => data_rdata_sw(6) -- value(6)
+      ,7 => data_rdata_sw(7) -- value(7)
+      );
 
     data_wcs     <= '1' when       (sig_waddr = GPIO_irq_DATA)   else '0';
     data_we      <= sig_wcs and sig_we and data_wcs;
@@ -397,15 +387,15 @@ begin  -- architecture rtl
     data_oe_rcs     <= '1' when (sig_raddr = GPIO_irq_DATA_OE) else '0';
     data_oe_re      <= sig_rcs and sig_re and data_oe_rcs;
     data_oe_rdata   <= (
-      0 => data_oe_rdata_sw(0), -- value(0)
-      1 => data_oe_rdata_sw(1), -- value(1)
-      2 => data_oe_rdata_sw(2), -- value(2)
-      3 => data_oe_rdata_sw(3), -- value(3)
-      4 => data_oe_rdata_sw(4), -- value(4)
-      5 => data_oe_rdata_sw(5), -- value(5)
-      6 => data_oe_rdata_sw(6), -- value(6)
-      7 => data_oe_rdata_sw(7), -- value(7)
-      others => '0');
+       0 => data_oe_rdata_sw(0) -- value(0)
+      ,1 => data_oe_rdata_sw(1) -- value(1)
+      ,2 => data_oe_rdata_sw(2) -- value(2)
+      ,3 => data_oe_rdata_sw(3) -- value(3)
+      ,4 => data_oe_rdata_sw(4) -- value(4)
+      ,5 => data_oe_rdata_sw(5) -- value(5)
+      ,6 => data_oe_rdata_sw(6) -- value(6)
+      ,7 => data_oe_rdata_sw(7) -- value(7)
+      );
 
     data_oe_wcs     <= '1' when       (sig_waddr = GPIO_irq_DATA_OE)   else '0';
     data_oe_we      <= sig_wcs and sig_we and data_oe_wcs;
