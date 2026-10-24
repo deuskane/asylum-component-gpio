@@ -1,12 +1,12 @@
 -------------------------------------------------------------------------------
--- Title      : sbi_GPIO_synth_top
+-- Title      : sbi_GPIO_wrapper
 -- Project    : Asylum
 -------------------------------------------------------------------------------
--- File       : sbi_GPIO_synth_top.vhd
+-- File       : sbi_GPIO_wrapper.vhd
 -- Author     : Mathieu Rosiere
 -------------------------------------------------------------------------------
 -- Description:
--- Synthesis check top (lint_ghdl, lint_ghdl_synth) : sbi_GPIO and
+-- Wrapper (lint_ghdl, lint_ghdl_synth_*) : sbi_GPIO and
 -- sbi_GPIO_irq with flat and constrained ports (their SBI ports are
 -- unconstrained and their DATA_OE_INIT / IRQ_* generics have no default :
 -- they cannot be a synthesis top). SBI address / data width :
@@ -20,6 +20,7 @@
 -- Revisions  :
 -- Date        Version  Author   Description
 -- 2026-10-20  1.0      mrosiere Created
+-- 2026-10-24  1.1      mrosiere Was sbi_GPIO_synth_top, library asylum
 -------------------------------------------------------------------------------
 
 library ieee;
@@ -29,7 +30,7 @@ use     asylum.sbi_pkg.all;
 use     asylum.GPIO_csr_pkg.all;
 use     asylum.GPIO_irq_csr_pkg.all;
 
-entity sbi_GPIO_synth_top is
+entity sbi_GPIO_wrapper is
   generic (
     NB_IO           : natural := 8;
     DATA_OE_INIT    : std_logic_vector(GPIO_DATA_WIDTH-1 downto 0)     := (others => '0');
@@ -67,9 +68,9 @@ entity sbi_GPIO_synth_top is
     irq_data_oe_o   : out std_logic_vector(NB_IO-1 downto 0);
     irq_it_o        : out std_logic
   );
-end entity sbi_GPIO_synth_top;
+end entity sbi_GPIO_wrapper;
 
-architecture rtl of sbi_GPIO_synth_top is
+architecture rtl of sbi_GPIO_wrapper is
 
   signal gpio_sbi_ini  : sbi_ini_t(addr (SBI_ADDR_WIDTH-1 downto 0),
                                    wdata(SBI_DATA_WIDTH-1 downto 0));
