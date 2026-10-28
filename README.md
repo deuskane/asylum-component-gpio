@@ -161,7 +161,7 @@ The CSR bank uses 2 address bits (`GPIO_ADDR_WIDTH = 2`) and 8-bit data (`GPIO_D
 | [hdl/gpio_pkg.vhd](hdl/gpio_pkg.vhd) | `gpio_pkg` | package | Component declarations of `GPIO_core`, `GPIO_irq_core`, `sbi_GPIO`, `sbi_GPIO_irq` and `GPIO_v1` |
 | [hdl/GPIO_core.vhd](hdl/GPIO_core.vhd) | `GPIO_core` | entity | Combinational GPIO logic between `GPIO_registers` and the pins |
 | [hdl/sbi_GPIO.vhd](hdl/sbi_GPIO.vhd) | `sbi_GPIO` | entity | Top-level: `GPIO_registers` + `GPIO_core` |
-| [hdl/GPIO_irq_core.vhd](hdl/GPIO_irq_core.vhd) | `GPIO_irq_core` | entity | GPIO logic with output register, input register, edge detection and `GIC_core` |
+| [hdl/GPIO_irq_core.vhd](hdl/GPIO_irq_core.vhd) | `GPIO_irq_core` | entity | GPIO logic with output register, input synchronizer, edge detection and `GIC_core` |
 | [hdl/sbi_GPIO_irq.vhd](hdl/sbi_GPIO_irq.vhd) | `sbi_GPIO_irq` | entity | Interrupt variant: `GPIO_irq_registers` + `GPIO_irq_core` |
 | [hdl/legacy/GPIO_v1.vhd](hdl/legacy/GPIO_v1.vhd) | `GPIO_v1` | entity | Legacy GPIO with direct `cs/re/we` bus; only in the `sim` fileset (reference of `tb_GPIO_vs_v1`) |
 | hdl/csr/GPIO_csr.vhd | `GPIO_registers` | entity | Generated CSR bank of `sbi_GPIO` (regtool) |
@@ -324,7 +324,7 @@ fusesoc --cores-root . run --build-root build --target sim_testcase_irq asylum:c
 
 ## Synthesis
 
-No dedicated synthesis target. The HDL sources of the `default` target (`hdl/*.vhd` + generated CSR) contain no simulation-only construct and are synthesizable; `hdl/legacy/GPIO_v1.vhd` is only part of the `sim` fileset. Resource usage is small and set by `NB_IO` (the CSR registers are always 8 bits wide). `data_i` is not synchronized inside the IP (one register stage in `data_in` for `sbi_GPIO`, direct combinational read path and edge detector in `sbi_GPIO_irq`); synchronize asynchronous inputs at the chip / FPGA top level.
+No dedicated synthesis target. The HDL sources of the `default` target (`hdl/*.vhd` + generated CSR) contain no simulation-only construct and are synthesizable; `hdl/legacy/GPIO_v1.vhd` is only part of the `sim` fileset. Resource usage is small and set by `NB_IO` (the CSR registers are always 8 bits wide). `data_i` is not synchronized inside `sbi_GPIO` (one register stage in `data_in`); `sbi_GPIO_irq` synchronizes each line with a 2 FF `sync2dff` (asylum-target-techmap) before the read path and the edge detector.
 
 ## Design Notes
 
@@ -336,7 +336,7 @@ No dedicated synthesis target. The HDL sources of the `default` target (`hdl/*.v
 
 ### Edge Interrupts (sbi_GPIO_irq)
 
-`GPIO_irq_core` registers the inputs (`data_in_r`) and computes:
+`GPIO_irq_core` synchronizes the inputs with a 2 FF `sync2dff` per line (`data_in`, 2 cycles of latency), registers them (`data_in_r`) and computes:
 
 - `posedge = data_in and not data_in_r`, `negedge = not data_in and data_in_r`
 - `its = (posedge and IRQ_POSEDGE) or (negedge and IRQ_NEGEDGE)`
@@ -392,4 +392,5 @@ asylum-component-gpio/
 | `asylum:system:GIC` | `hdl` | `GIC_core` used by `GPIO_irq_core` |
 | `asylum:utils:generators` | `hdl` | regtool generator and CSR building blocks (`csr_reg`, `csr_ext`) |
 | `asylum:utils:pkg` | `hdl` | Common packages (`sbi_pkg`, `pbi_pkg`, `string_pkg`, ...) |
+| `asylum:target:techmap` | `hdl` | `sync2dff` synchronizer used by `GPIO_irq_core` |
 | `bitvis:verification:uvvm` | `sim` | UVVM utility library, SBI VIP and GPIO VIP |
