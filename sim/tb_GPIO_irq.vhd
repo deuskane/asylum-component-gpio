@@ -42,6 +42,7 @@ architecture sim of tb_GPIO_IRQ is
   constant GPIO_OE_INIT    : std_logic_vector(GPIO_DATA_WIDTH-1 downto 0) := (others => '0');
   constant IRQ_POSEDGE     : std_logic_vector(GPIO_DATA_WIDTH-1 downto 0) := "00001010";
   constant IRQ_NEGEDGE     : std_logic_vector(GPIO_DATA_WIDTH-1 downto 0) := "00001100";
+  constant SYNC_CYCLES     : natural := 2; -- Latency of the data_i synchronizer
 
   signal clk_i             : std_logic := '0';
   signal clk_ena           : boolean   := true;
@@ -110,6 +111,7 @@ begin
     gpio_check(x"0"       , "Check GPIO output value"      , data_o   , error, C_SCOPE);
     gpio_check(x"0"       , "Check GPIO output enable mask", data_oe_o, error, C_SCOPE);
 
+    wait_num_rising_edge(clk_i, SYNC_CYCLES);
     wait until rising_edge(clk_i);
     sbi_check(GPIO_IRQ_DATA    , x"05", "Read data"    , clk_i, sbi_if);
     sbi_check(GPIO_IRQ_DATA_OE , x"00", "Read data_oe" , clk_i, sbi_if);
@@ -135,6 +137,7 @@ begin
     log(ID_LOG_HDR, "Switch to input mode and verify input data read path", C_SCOPE);
     ------------------------------------------------
     gpio_set(x"C", "Drive input value via GPIO VIP", data_i, C_SCOPE);
+    wait_num_rising_edge(clk_i, SYNC_CYCLES);
     wait until rising_edge(clk_i);
     sbi_write(GPIO_IRQ_DATA_OE , x"00", "Set GPIO direction to input", clk_i, sbi_if);
 
@@ -151,8 +154,10 @@ begin
     sbi_check(GPIO_IRQ_IMR, x"01", "Read IMR", clk_i, sbi_if);
 
     gpio_set(x"0", "Clear GPIO input", data_i, C_SCOPE);
+    wait_num_rising_edge(clk_i, SYNC_CYCLES);
     wait until rising_edge(clk_i);
     gpio_set(x"2", "Drive rising edge on bit 1", data_i, C_SCOPE);
+    wait_num_rising_edge(clk_i, SYNC_CYCLES);
     wait until rising_edge(clk_i);
 
     check_value(it_o, '0', ERROR, "Check posedge interrupt output");
@@ -165,8 +170,10 @@ begin
     sbi_check(GPIO_IRQ_IMR, x"02", "Read IMR", clk_i, sbi_if);
 
     gpio_set(x"0", "Clear GPIO input", data_i, C_SCOPE);
+    wait_num_rising_edge(clk_i, SYNC_CYCLES);
     wait until rising_edge(clk_i);
     gpio_set(x"2", "Drive rising edge on bit 1", data_i, C_SCOPE);
+    wait_num_rising_edge(clk_i, SYNC_CYCLES);
     wait until rising_edge(clk_i);
     wait until rising_edge(clk_i);
 
@@ -181,12 +188,14 @@ begin
     log(ID_LOG_HDR, "Test negedge interrupt detection GPIO[2]", C_SCOPE);
     ------------------------------------------------
     gpio_set(x"4", "Drive high level on bit 2", data_i, C_SCOPE);
+    wait_num_rising_edge(clk_i, SYNC_CYCLES);
     wait until rising_edge(clk_i);
 
     sbi_write(GPIO_IRQ_IMR, x"04", "Enable GPIO interrupt", clk_i, sbi_if);
     sbi_check(GPIO_IRQ_IMR, x"04", "Read IMR", clk_i, sbi_if);
 
     gpio_set(x"0", "Clear GPIO input", data_i, C_SCOPE);
+    wait_num_rising_edge(clk_i, SYNC_CYCLES);
     wait until rising_edge(clk_i);
     wait until rising_edge(clk_i);
 

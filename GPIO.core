@@ -75,6 +75,7 @@ filesets:
       - asylum:system:GIC
       - asylum:utils:generators
       - asylum:utils:pkg
+      - asylum:target:techmap
 
   #---------------------------------------
   sim:

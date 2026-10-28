@@ -26,6 +26,7 @@ use     IEEE.numeric_std.ALL;
 library asylum;
 use     asylum.GIC_pkg.all;
 use     asylum.GPIO_irq_csr_pkg.ALL;
+use     asylum.techmap_pkg.all;
 
 entity GPIO_irq_core is
   generic
@@ -59,6 +60,7 @@ architecture rtl of GPIO_irq_core is
   -----------------------------------------------------------------------------
   -- Signal
   -----------------------------------------------------------------------------
+  signal data_sync       : std_logic_vector (NB_IO         -1 downto 0);
   signal data_in         : std_logic_vector (CSR_DATA_WIDTH-1 downto 0);
   signal data_in_posedge : std_logic_vector (CSR_DATA_WIDTH-1 downto 0);
   signal data_in_negedge : std_logic_vector (CSR_DATA_WIDTH-1 downto 0);
@@ -71,10 +73,27 @@ architecture rtl of GPIO_irq_core is
 begin
 
   -----------------------------------------------------------------------------
+  -- Input synchronizer
+  -----------------------------------------------------------------------------
+  -- data_i is asynchronous : 2 FF synchronizer on each line, used by the read
+  -- path and by the edge detection. No reset, like the edge reference
+  -- register data_in_r : a line high during the reset does not give an edge
+  -- at the reset release.
+  gen_data_sync : for i in data_i'range
+  generate
+    ins_data_sync : sync2dff
+      port map
+      (clk_i    => clk_i
+      ,d_i      => data_i   (i)
+      ,q_o      => data_sync(i)
+      );
+  end generate gen_data_sync;
+
+  -----------------------------------------------------------------------------
   -- Data I/O
   -----------------------------------------------------------------------------
   -- transfer the input data to the internal signal with the same width as the CSR data width
-  data_in               <= std_logic_vector(resize(unsigned(data_i    ), CSR_DATA_WIDTH));
+  data_in               <= std_logic_vector(resize(unsigned(data_sync ), CSR_DATA_WIDTH));
   data_out              <= std_logic_vector(resize(unsigned(data_out_r), CSR_DATA_WIDTH));
 
   data_o                <= data_out_r;
