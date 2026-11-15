@@ -72,7 +72,7 @@ filesets:
     file_type    : vhdlSource
     logical_name : asylum
     depend       :
-      - asylum:system:GIC
+      - ">=asylum:system:GIC:2.0.0"
       - asylum:utils:generators
       - asylum:utils:pkg
       - asylum:target:techmap
