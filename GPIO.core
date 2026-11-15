@@ -27,9 +27,11 @@ CAPI=2:
 # 2026-07-20  1.7.0    mrosiere Add Interruption
 #                               Use uvvm for testbench
 # 2026-10-05  1.7.1    mrosiere Fix default target toplevel (sbi_GPIO)
+# 2026-11-15  2.0.0    mrosiere asylum:system:GIC >= 2.0.0 : isr records the edges of the
+#                               masked lines too (polling), imr only masks it_o
 #-----------------------------------------------------------------------------
 
-name        : asylum:component:GPIO:1.7.1
+name        : asylum:component:GPIO:2.0.0
 description : GPIO Module
 
 #=========================================
@@ -72,7 +74,7 @@ filesets:
     file_type    : vhdlSource
     logical_name : asylum
     depend       :
-      - asylum:system:GIC
+      - ">=asylum:system:GIC:2.0.0"
       - asylum:utils:generators
       - asylum:utils:pkg
       - asylum:target:techmap
