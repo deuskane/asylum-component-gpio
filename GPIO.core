@@ -75,7 +75,7 @@ filesets:
     logical_name : asylum
     depend       :
       - ">=asylum:system:GIC:2.0.0"
-      - asylum:utils:generators
+      - ">=asylum:utils:generators:2.8.0"
       - asylum:utils:pkg
       - asylum:target:techmap
 
@@ -90,6 +90,17 @@ filesets:
     file_type : vhdlSource-2008
     depend       :
       - bitvis:verification:uvvm      
+
+  #---------------------------------------
+  syn:
+  #---------------------------------------
+    files        :
+      - syn/sbi_GPIO_wrapper.vhd
+    file_type    : vhdlSource-2008
+    logical_name : asylum
+    # ghdl_synth.sh / ghdl_synth.mk (pre_run hook of lint_ghdl_synth_*)
+    depend       :
+      - asylum:utils:ghdl_synth
 
 #=========================================
 targets:
@@ -106,6 +117,55 @@ targets:
     generate        :
       - gen_csr
       - gen_csr_irq
+
+  #---------------------------------------
+  # Lint : -Wall analysis and elaboration (empty simulation)
+  #---------------------------------------
+  lint_ghdl : &lint_ghdl
+    << : *default
+    description     : Lint with GHDL (-Wall analysis and elaboration of sbi_GPIO_wrapper)
+    toplevel        : asylum.sbi_GPIO_wrapper
+    filesets_append : [syn]
+    default_tool    : ghdl
+    tools :
+      ghdl :
+        analyze_options : ["-Wall"]
+
+  #---------------------------------------
+  # Synthesis check : -Wall analysis, ghdl --synth -Wall and elaboration
+  # (no simulation) of sbi_GPIO_wrapper with the generics of the target.
+  # The pre_run hook (ghdl_synth.sh of asylum:utils:ghdl_synth) adds
+  # ghdl_synth.mk to the edalize Makefile.
+  # FuseSoC merges tools in depth : analyze_options comes from lint_ghdl.
+  #---------------------------------------
+  lint_ghdl_synth_default : &lint_ghdl_synth
+    << : *lint_ghdl
+    description     : Synthesis check of sbi_GPIO_wrapper, default generics (PicoSoC switches)
+    tools :
+      ghdl :
+        run_options     : ["--no-run"]
+    hooks :
+      pre_run : [ghdl_synth]
+
+  #---------------------------------------
+  lint_ghdl_synth_led :
+  #---------------------------------------
+    << : *lint_ghdl_synth
+    description     : Synthesis check of sbi_GPIO_wrapper, PicoSoC LEDs
+    parameters      :
+      - DATA_OE_INIT=11111111
+      - IRQ_POSEDGE=00000000
+      - IRQ_NEGEDGE=00000000
+
+  #---------------------------------------
+  lint_ghdl_synth_nb_io4 :
+  #---------------------------------------
+    << : *lint_ghdl_synth
+    description     : Synthesis check of sbi_GPIO_wrapper, NB_IO 4 with the edges of tb_GPIO_irq
+    parameters      :
+      - NB_IO=4
+      - IRQ_POSEDGE=00001010
+      - IRQ_NEGEDGE=00001100
 
   #---------------------------------------
   sim_testcase_vs_v1:
@@ -147,3 +207,44 @@ targets:
       ghdl :
         analyze_options : ["-Wall","-fsynopsys","-frelaxed","--no-vital-checks"]
         run_options     : ["--fst=dut.fst","--ieee-asserts=disable"]
+
+#=========================================
+scripts:
+#=========================================
+
+  #---------------------------------------
+  # pre_run hook of lint_ghdl_synth_* (cwd = work_root)
+  #---------------------------------------
+  ghdl_synth :
+    cmd : [bash, ghdl_synth.sh]
+
+#=========================================
+parameters :
+#=========================================
+
+  #---------------------------------------
+  # Generics of sbi_GPIO_wrapper (lint_ghdl_synth_*)
+  #---------------------------------------
+  NB_IO :
+    description : Number of IOs
+    datatype    : int
+    default     : 8
+    paramtype   : generic
+
+  DATA_OE_INIT :
+    description : Reset value of the output enable register (8-bit string)
+    datatype    : str
+    default     : "00000000"
+    paramtype   : generic
+
+  IRQ_POSEDGE :
+    description : Interrupt on rising edge, one bit per IO (8-bit string)
+    datatype    : str
+    default     : "11111111"
+    paramtype   : generic
+
+  IRQ_NEGEDGE :
+    description : Interrupt on falling edge, one bit per IO (8-bit string)
+    datatype    : str
+    default     : "11111111"
+    paramtype   : generic
