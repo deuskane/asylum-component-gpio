@@ -71,7 +71,7 @@ filesets:
       - hdl/sbi_GPIO.vhd
       - hdl/GPIO_irq_core.vhd
       - hdl/sbi_GPIO_irq.vhd
-    file_type    : vhdlSource
+    file_type    : vhdlSource-2008
     logical_name : asylum
     depend       :
       - ">=asylum:system:GIC:2.0.0"

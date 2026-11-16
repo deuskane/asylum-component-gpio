@@ -337,7 +337,7 @@ fusesoc --cores-root . run --build-root build --target sim_testcase_irq asylum:c
 
 ## Synthesis
 
-No vendor synthesis target (the `lint_ghdl_synth_*` targets check the RTL with `ghdl --synth`, see [Targets](#targets)). The HDL sources of the `default` target (`hdl/*.vhd` + generated CSR) contain no simulation-only construct; `hdl/legacy/GPIO_v1.vhd` is only part of the `sim` fileset. Resource usage is small and set by `NB_IO` (the CSR registers are always 8 bits wide). `sbi_GPIO` synchronizes `data_i` with 2 FF (one stage in `GPIO_core`, then the `data_in` register). `sbi_GPIO_irq` has no synchronizer (direct combinational read path and edge detector); synchronize its asynchronous inputs at the chip / FPGA top level.
+No vendor synthesis target (the `lint_ghdl_synth_*` targets check the RTL with `ghdl --synth`, see [Targets](#targets)). The HDL sources of the `default` target (`hdl/*.vhd` + generated CSR, VHDL-2008: unconstrained SBI record ports) contain no simulation-only construct; `hdl/legacy/GPIO_v1.vhd` is only part of the `sim` fileset. Resource usage is small and set by `NB_IO` (the CSR registers are always 8 bits wide). `sbi_GPIO` synchronizes `data_i` with 2 FF (one stage in `GPIO_core`, then the `data_in` register). `sbi_GPIO_irq` has no synchronizer (direct combinational read path and edge detector); synchronize its asynchronous inputs at the chip / FPGA top level.
 
 ## Design Notes
 
