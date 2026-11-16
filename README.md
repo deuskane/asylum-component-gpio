@@ -282,6 +282,7 @@ Notes:
 - The reset value of `data_oe` is the `DATA_OE_INIT` generic in both blocks.
 - `GPIO`: `data` is an external register (`hwtype: ext`) whose read value is computed by `GPIO_core`; writes to `data` are aliased to `data_out` (`alias_write`). `data_in` is written by hardware every cycle.
 - `GPIO_irq`: there is no `data_in` / `data_out` register; `data` reads the masked pin / output value and writes load the output register of `GPIO_irq_core`. `isr` is rw1c, `imr` resets to 0.
+- Read-modify-write of `data` on a port with mixed directions: the read returns the pin value of the input lines and the write loads the output register of every line, so the pin values of the input lines are copied into their output register. Write the output value of a line right before setting it as output (`data` first, then `data_oe`). `sbi_GPIO` also has `data_out`, which reads back the output register: do the read-modify-write on `data_out` there.
 
 ## Verification
 
@@ -345,6 +346,7 @@ No vendor synthesis target (the `lint_ghdl_synth_*` targets check the RTL with `
 
 - Output: `data_o = data_out`, `data_oe_o = data_oe` (1 = output).
 - Read of `data`: `(data_out and data_oe) or (data_in and not data_oe)`: output lines return the driven value, input lines the pin value.
+- Write of `data`: loads the output register of every line, input lines included (see the notes of the Register Map).
 - `data_i` is zero-extended to the 8-bit CSR width: input bits above `NB_IO` read as 0.
 
 ### Edge Interrupts (sbi_GPIO_irq)
