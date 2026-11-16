@@ -40,7 +40,7 @@
 
 **General purpose I/O with per-pin direction control and CSR access over the SBI bus, with an optional edge-interrupt variant.**
 
-VLNV: `asylum:component:GPIO:2.0.0`
+VLNV: `asylum:component:GPIO:2.1.0`
 
 ## Table of Contents
 
@@ -330,7 +330,7 @@ make clean                # remove build/ and log/
 Equivalent FuseSoC command:
 
 ```bash
-fusesoc --cores-root . run --build-root build --target sim_testcase_irq asylum:component:GPIO:2.0.0
+fusesoc --cores-root . run --build-root build --target sim_testcase_irq asylum:component:GPIO:2.1.0
 ```
 
 `sim_testcase` and `sim_testcase_irq` run GHDL with `--fst=dut.fst`, `sim_testcase_vs_v1` with `--vcd=dut.vcd`. CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the three `sim_*` targets.
