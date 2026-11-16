@@ -90,7 +90,7 @@ architecture rtl of GPIO_irq_registers is
 
   --==================================
   -- Register    : data
-  -- Description : data
+  -- Description : data (write the output value of a line before setting it as output)
   -- Address     : 0x2
   -- Width       : 8
   -- Sw Access   : rw
@@ -283,7 +283,7 @@ begin  -- architecture rtl
 
   --==================================
   -- Register    : data
-  -- Description : data
+  -- Description : data (write the output value of a line before setting it as output)
   -- Address     : 0x2
   -- Width       : 8
   -- Sw Access   : rw

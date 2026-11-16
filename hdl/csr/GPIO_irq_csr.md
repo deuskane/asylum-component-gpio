@@ -21,10 +21,10 @@ Interruption Mask Register
 0: interrupt is disable, 1: interrupt is enable
 
 ## 0x2 data
-data
+data (write the output value of a line before setting it as output)
 
 ### [7:0] value
-Data with data_oe with mask apply
+Read : output value (output lines) or pin (input lines). Write : output register of every line
 
 ## 0x3 data_oe
 GPIO Direction

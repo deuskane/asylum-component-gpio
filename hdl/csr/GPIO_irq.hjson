@@ -51,7 +51,7 @@
         {
             name         : "data",
             address      : "x2",
-            desc         : "data",
+            desc         : "data (write the output value of a line before setting it as output)",
             swaccess     : "rw",
             hwaccess     : "rw",
             hwtype       : "ext",
@@ -61,7 +61,7 @@
                     name: "value",
                     bits: "7:0",
                     init: "d0",
-                    desc: "Data with data_oe with mask apply"
+                    desc: "Read : output value (output lines) or pin (input lines). Write : output register of every line"
                 },
             ]
         },

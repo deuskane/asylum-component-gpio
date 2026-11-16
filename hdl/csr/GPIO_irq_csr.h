@@ -35,13 +35,13 @@
 
 //==================================
 // Register    : data
-// Description : data
+// Description : data (write the output value of a line before setting it as output)
 // Address     : 0x2
 //==================================
 #define GPIO_IRQ_DATA 0x2
 
 // Field       : data.value
-// Description : Data with data_oe with mask apply
+// Description : Read : output value (output lines) or pin (input lines). Write : output register of every line
 // Range       : [7:0]
 #define GPIO_IRQ_DATA_VALUE      0
 #define GPIO_IRQ_DATA_VALUE_MASK 255

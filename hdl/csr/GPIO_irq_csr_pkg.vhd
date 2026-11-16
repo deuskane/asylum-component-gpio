@@ -60,7 +60,7 @@ package GPIO_irq_csr_pkg is
 
   --==================================
   -- Register    : data
-  -- Description : data
+  -- Description : data (write the output value of a line before setting it as output)
   -- Address     : 0x2
   -- Width       : 8
   -- Sw Access   : rw
@@ -72,12 +72,12 @@ package GPIO_irq_csr_pkg is
   type GPIO_irq_data_sw2hw_t is record
     re    : std_logic; -- Software read
     we    : std_logic; -- Software write
-    value : std_logic_vector(7 downto 0); -- Data with data_oe with mask apply
+    value : std_logic_vector(7 downto 0); -- Read : output value (output lines) or pin (input lines). Write : output register of every line
   end record GPIO_irq_data_sw2hw_t;
 
   type GPIO_irq_data_hw2sw_t is record
     we    : std_logic; -- Hardware write
-    value : std_logic_vector(7 downto 0); -- Data with data_oe with mask apply
+    value : std_logic_vector(7 downto 0); -- Read : output value (output lines) or pin (input lines). Write : output register of every line
   end record GPIO_irq_data_hw2sw_t;
 
   --==================================
