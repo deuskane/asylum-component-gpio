@@ -127,6 +127,7 @@ filesets:
   #---------------------------------------
     files        :
       - syn/sbi_GPIO_wrapper.vhd
+      - syn/sbi_GPIO_irq_wrapper.vhd
     file_type    : vhdlSource-2008
     logical_name : asylum
     # ghdl_synth.sh / ghdl_synth.mk (pre_run hook of lint_ghdl_synth_*)
@@ -157,11 +158,12 @@ targets:
       - gen_csr_irq
 
   #---------------------------------------
-  # Lint : -Wall analysis and elaboration (empty simulation)
+  # Lint : -Wall analysis of both wrappers, elaboration (empty
+  # simulation) of sbi_GPIO_wrapper
   #---------------------------------------
   lint_ghdl : &lint_ghdl
     << : *default
-    description     : Lint with GHDL (-Wall analysis and elaboration of sbi_GPIO_wrapper)
+    description     : Lint with GHDL (-Wall analysis of sbi_GPIO_wrapper and sbi_GPIO_irq_wrapper, elaboration of sbi_GPIO_wrapper)
     toplevel        : asylum.sbi_GPIO_wrapper
     filesets_append : [syn]
     default_tool    : ghdl
@@ -171,14 +173,16 @@ targets:
 
   #---------------------------------------
   # Synthesis check : -Wall analysis, ghdl --synth -Wall and elaboration
-  # (no simulation) of sbi_GPIO_wrapper with the generics of the target.
+  # (no simulation) of the wrapper of a variant (sbi_GPIO_wrapper :
+  # lint_ghdl_synth_gpio_*, sbi_GPIO_irq_wrapper : lint_ghdl_synth_gpio_irq_*)
+  # with the generics of the target.
   # The pre_run hook (ghdl_synth.sh of asylum:utils:ghdl_synth) adds
   # ghdl_synth.mk to the edalize Makefile.
   # FuseSoC merges tools in depth : analyze_options comes from lint_ghdl.
   #---------------------------------------
-  lint_ghdl_synth_default : &lint_ghdl_synth
+  lint_ghdl_synth_gpio_default : &lint_ghdl_synth
     << : *lint_ghdl
-    description     : Synthesis check of sbi_GPIO_wrapper, default generics (PicoSoC switches)
+    description     : Synthesis check of sbi_GPIO_wrapper, default generics (8 lines, input after reset)
     tools :
       ghdl :
         run_options     : ["--no-run"]
@@ -186,35 +190,50 @@ targets:
       pre_run : [ghdl_synth]
 
   #---------------------------------------
-  lint_ghdl_synth_led :
+  lint_ghdl_synth_gpio_led :
   #---------------------------------------
     << : *lint_ghdl_synth
-    description     : Synthesis check of sbi_GPIO_wrapper, PicoSoC LEDs
+    description     : Synthesis check of sbi_GPIO_wrapper, every line output after reset (LEDs)
     parameters      :
       - DATA_OE_INIT=11111111
-      - IRQ_POSEDGE=00000000
-      - IRQ_NEGEDGE=00000000
 
   #---------------------------------------
-  lint_ghdl_synth_nb_io4 :
+  lint_ghdl_synth_gpio_irq_default : &lint_ghdl_synth_irq
   #---------------------------------------
     << : *lint_ghdl_synth
-    description     : Synthesis check of sbi_GPIO_wrapper, NB_IO 4 with the edges of tb_GPIO_irq
+    description     : Synthesis check of sbi_GPIO_irq_wrapper, default generics (8 lines, input after reset, interrupt on both edges, PicoSoC switches)
+    toplevel        : asylum.sbi_GPIO_irq_wrapper
+
+  #---------------------------------------
+  lint_ghdl_synth_gpio_irq_nb_io4 :
+  #---------------------------------------
+    << : *lint_ghdl_synth_irq
+    description     : Synthesis check of sbi_GPIO_irq_wrapper, NB_IO 4 with the edges of tb_GPIO_irq
     parameters      :
       - NB_IO=4
       - IRQ_POSEDGE=00001010
       - IRQ_NEGEDGE=00001100
 
   #---------------------------------------
-  # Synthesis : size of sbi_GPIO_wrapper with the generics of the target,
-  # Xilinx Artix-7 (LUT, FF, BRAM, DSP) and sky130 (area), by Yosys and
-  # its GHDL plugin. Same configurations as lint_ghdl_synth_*.
+  lint_ghdl_synth_gpio_irq_no_irq :
+  #---------------------------------------
+    << : *lint_ghdl_synth_irq
+    description     : Synthesis check of sbi_GPIO_irq_wrapper, every line output after reset, no interrupt (PicoSoC LEDs)
+    parameters      :
+      - DATA_OE_INIT=11111111
+      - IRQ_POSEDGE=00000000
+      - IRQ_NEGEDGE=00000000
+
+  #---------------------------------------
+  # Synthesis : size of the wrapper of a variant with the generics of the
+  # target, Xilinx Artix-7 (LUT, FF, BRAM, DSP) and sky130 (area), by Yosys
+  # and its GHDL plugin. Same configurations as lint_ghdl_synth_*.
   # The pre_run hook (yosys_synth.sh of asylum:utils:yosys_synth) adds
   # yosys_synth.mk to the edalize Makefile.
   #---------------------------------------
-  syn_default : &syn
+  syn_gpio_default : &syn
     << : *lint_ghdl
-    description     : Synthesis (Artix-7, sky130) of sbi_GPIO_wrapper, default generics (PicoSoC switches)
+    description     : Synthesis (Artix-7, sky130) of sbi_GPIO_wrapper, default generics (8 lines, input after reset)
     filesets_append : [syn, syn_yosys]
     tools :
       ghdl :
@@ -223,33 +242,49 @@ targets:
       pre_run : [yosys_synth]
 
   #---------------------------------------
-  syn_led :
+  syn_gpio_led :
   #---------------------------------------
     << : *syn
-    description     : Synthesis (Artix-7, sky130) of sbi_GPIO_wrapper, PicoSoC LEDs
+    description     : Synthesis (Artix-7, sky130) of sbi_GPIO_wrapper, every line output after reset (LEDs)
     parameters      :
       - DATA_OE_INIT=11111111
-      - IRQ_POSEDGE=00000000
-      - IRQ_NEGEDGE=00000000
 
   #---------------------------------------
-  syn_nb_io4 :
+  syn_gpio_irq_default : &syn_irq
   #---------------------------------------
     << : *syn
-    description     : Synthesis (Artix-7, sky130) of sbi_GPIO_wrapper, NB_IO 4 with the edges of tb_GPIO_irq
+    description     : Synthesis (Artix-7, sky130) of sbi_GPIO_irq_wrapper, default generics (8 lines, input after reset, interrupt on both edges, PicoSoC switches)
+    toplevel        : asylum.sbi_GPIO_irq_wrapper
+
+  #---------------------------------------
+  syn_gpio_irq_nb_io4 :
+  #---------------------------------------
+    << : *syn_irq
+    description     : Synthesis (Artix-7, sky130) of sbi_GPIO_irq_wrapper, NB_IO 4 with the edges of tb_GPIO_irq
     parameters      :
       - NB_IO=4
       - IRQ_POSEDGE=00001010
       - IRQ_NEGEDGE=00001100
 
   #---------------------------------------
+  syn_gpio_irq_no_irq :
+  #---------------------------------------
+    << : *syn_irq
+    description     : Synthesis (Artix-7, sky130) of sbi_GPIO_irq_wrapper, every line output after reset, no interrupt (PicoSoC LEDs)
+    parameters      :
+      - DATA_OE_INIT=11111111
+      - IRQ_POSEDGE=00000000
+      - IRQ_NEGEDGE=00000000
+
+  #---------------------------------------
   # tb_GPIO (sim/gpio) : compiled once per configuration (DATA_OE_INIT),
   # scenarios chosen at run time (TESTS_LIST, empty : build and
-  # elaboration only). Reference configuration DATA_OE_INIT = 0 (PicoSoC
-  # switches) : sim_gpio (build only) and one sim_gpio_<test> target per
-  # scenario ; sim_gpio_led (DATA_OE_INIT = 0xFF, PicoSoC LEDs) runs the
-  # whole list. Each target repeats the generics of its configuration :
-  # FuseSoC replaces the parameters list of an inherited target.
+  # elaboration only). Reference configuration DATA_OE_INIT = 0 (every
+  # line input after reset) : sim_gpio (build only) and one
+  # sim_gpio_<test> target per scenario ; sim_gpio_led (DATA_OE_INIT =
+  # 0xFF, every line output after reset) runs the whole list. Each target
+  # repeats the generics of its configuration : FuseSoC replaces the
+  # parameters list of an inherited target.
   #---------------------------------------
   sim_gpio: &sim_gpio
     << : *default
@@ -329,7 +364,7 @@ targets:
   sim_gpio_led:
   #---------------------------------------
     << : *sim_gpio
-    description     : Simulation of sbi_GPIO (UVVM), compared with GPIO_v1 - DATA_OE_INIT 0xFF (PicoSoC LEDs), every scenario
+    description     : Simulation of sbi_GPIO (UVVM), compared with GPIO_v1 - DATA_OE_INIT 0xFF (every line output after reset), every scenario
     parameters      :
       - TESTS_LIST=reset_values,output,input,mixed,async_reset,walking_one
       - DATA_OE_INIT=11111111
@@ -514,7 +549,7 @@ parameters :
     paramtype   : generic
 
   #---------------------------------------
-  # Generics of sbi_GPIO_wrapper (lint_ghdl_synth_*, syn_*), tb_GPIO and
+  # Generics of the wrappers (lint_ghdl_synth_*, syn_*), tb_GPIO and
   # tb_GPIO_irq
   #---------------------------------------
   NB_IO :
