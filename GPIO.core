@@ -133,6 +133,13 @@ filesets:
     depend       :
       - asylum:utils:ghdl_synth
 
+  #---------------------------------------
+  syn_yosys:
+  #---------------------------------------
+    # yosys_synth.sh / yosys_synth.mk / yosys_synth.py (pre_run hook of syn_*)
+    depend       :
+      - asylum:utils:yosys_synth
+
 #=========================================
 targets:
 #=========================================
@@ -193,6 +200,43 @@ targets:
   #---------------------------------------
     << : *lint_ghdl_synth
     description     : Synthesis check of sbi_GPIO_wrapper, NB_IO 4 with the edges of tb_GPIO_irq
+    parameters      :
+      - NB_IO=4
+      - IRQ_POSEDGE=00001010
+      - IRQ_NEGEDGE=00001100
+
+  #---------------------------------------
+  # Synthesis : size of sbi_GPIO_wrapper with the generics of the target,
+  # Xilinx Artix-7 (LUT, FF, BRAM, DSP) and sky130 (area), by Yosys and
+  # its GHDL plugin. Same configurations as lint_ghdl_synth_*.
+  # The pre_run hook (yosys_synth.sh of asylum:utils:yosys_synth) adds
+  # yosys_synth.mk to the edalize Makefile.
+  #---------------------------------------
+  syn_default : &syn
+    << : *lint_ghdl
+    description     : Synthesis (Artix-7, sky130) of sbi_GPIO_wrapper, default generics (PicoSoC switches)
+    filesets_append : [syn, syn_yosys]
+    tools :
+      ghdl :
+        run_options     : ["--no-run"]
+    hooks :
+      pre_run : [yosys_synth]
+
+  #---------------------------------------
+  syn_led :
+  #---------------------------------------
+    << : *syn
+    description     : Synthesis (Artix-7, sky130) of sbi_GPIO_wrapper, PicoSoC LEDs
+    parameters      :
+      - DATA_OE_INIT=11111111
+      - IRQ_POSEDGE=00000000
+      - IRQ_NEGEDGE=00000000
+
+  #---------------------------------------
+  syn_nb_io4 :
+  #---------------------------------------
+    << : *syn
+    description     : Synthesis (Artix-7, sky130) of sbi_GPIO_wrapper, NB_IO 4 with the edges of tb_GPIO_irq
     parameters      :
       - NB_IO=4
       - IRQ_POSEDGE=00001010
@@ -453,6 +497,12 @@ scripts:
   ghdl_synth :
     cmd : [bash, ghdl_synth.sh]
 
+  #---------------------------------------
+  # pre_run hook of syn_* (cwd = work_root)
+  #---------------------------------------
+  yosys_synth :
+    cmd : [bash, yosys_synth.sh]
+
 #=========================================
 parameters :
 #=========================================
@@ -464,7 +514,7 @@ parameters :
     paramtype   : generic
 
   #---------------------------------------
-  # Generics of sbi_GPIO_wrapper (lint_ghdl_synth_*), tb_GPIO and
+  # Generics of sbi_GPIO_wrapper (lint_ghdl_synth_*, syn_*), tb_GPIO and
   # tb_GPIO_irq
   #---------------------------------------
   NB_IO :

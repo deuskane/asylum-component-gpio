@@ -22,4 +22,7 @@ sim_gpio_mixed            : Simulation of sbi_GPIO (UVVM), compared with GPIO_v1
 sim_gpio_output           : Simulation of sbi_GPIO (UVVM), compared with GPIO_v1 - every line output, data and data_out writes drive data_o
 sim_gpio_reset_values     : Simulation of sbi_GPIO (UVVM), compared with GPIO_v1 - reset values of the registers and pins (DATA_OE_INIT), data_in through the synchronizer
 sim_gpio_walking_one      : Simulation of sbi_GPIO (UVVM), compared with GPIO_v1 - walking one on the output register then on the pins
+syn_default               : Synthesis (Artix-7, sky130) of sbi_GPIO_wrapper, default generics (PicoSoC switches)
+syn_led                   : Synthesis (Artix-7, sky130) of sbi_GPIO_wrapper, PicoSoC LEDs
+syn_nb_io4                : Synthesis (Artix-7, sky130) of sbi_GPIO_wrapper, NB_IO 4 with the edges of tb_GPIO_irq
 
