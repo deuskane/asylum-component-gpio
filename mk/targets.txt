@@ -1,9 +1,32 @@
-default                 : Default Target
-lint_ghdl               : Lint with GHDL (-Wall analysis and elaboration of sbi_GPIO_wrapper)
-lint_ghdl_synth_default : Synthesis check of sbi_GPIO_wrapper, default generics (PicoSoC switches)
-lint_ghdl_synth_led     : Synthesis check of sbi_GPIO_wrapper, PicoSoC LEDs
-lint_ghdl_synth_nb_io4  : Synthesis check of sbi_GPIO_wrapper, NB_IO 4 with the edges of tb_GPIO_irq
-sim_testcase            : Simulation of sbi_GPIO with VIP
-sim_testcase_irq        : Simulation of sbi_GPIO_irq with VIP
-sim_testcase_vs_v1      : Simulation of sb_GPIO against GPIO_v1
+default                          : Default Target
+lint_ghdl                        : Lint with GHDL (-Wall analysis of sbi_GPIO_wrapper and sbi_GPIO_irq_wrapper, elaboration of sbi_GPIO_wrapper)
+lint_ghdl_synth_gpio_default     : Synthesis check of sbi_GPIO_wrapper, default generics (8 lines, input after reset)
+lint_ghdl_synth_gpio_irq_default : Synthesis check of sbi_GPIO_irq_wrapper, default generics (8 lines, input after reset, interrupt on both edges, PicoSoC switches)
+lint_ghdl_synth_gpio_irq_nb_io4  : Synthesis check of sbi_GPIO_irq_wrapper, NB_IO 4 with the edges of tb_GPIO_irq
+lint_ghdl_synth_gpio_irq_no_irq  : Synthesis check of sbi_GPIO_irq_wrapper, every line output after reset, no interrupt (PicoSoC LEDs)
+lint_ghdl_synth_gpio_led         : Synthesis check of sbi_GPIO_wrapper, every line output after reset (LEDs)
+sim_gpio                         : Simulation of sbi_GPIO (UVVM), compared with GPIO_v1 - build only (scenarios of TESTS_LIST)
+sim_gpio_async_reset             : Simulation of sbi_GPIO (UVVM), compared with GPIO_v1 - asynchronous reset of the output register and data_oe, pins held high during the reset
+sim_gpio_input                   : Simulation of sbi_GPIO (UVVM), compared with GPIO_v1 - every line input, data and data_in read the pins
+sim_gpio_irq                     : Simulation of sbi_GPIO_irq (UVVM) - build only (scenarios of TESTS_LIST)
+sim_gpio_irq_async_reset         : Simulation of sbi_GPIO_irq (UVVM) - asynchronous reset, pins high during the reset give no edge at the release
+sim_gpio_irq_default             : Simulation of sbi_GPIO_irq (UVVM) - 8 lines, interrupt on both edges (PicoSoC switches), every scenario
+sim_gpio_irq_input               : Simulation of sbi_GPIO_irq (UVVM) - data reads the pins of the input lines, per bit
+sim_gpio_irq_led                 : Simulation of sbi_GPIO_irq (UVVM) - 8 lines output after reset, no interrupt (PicoSoC LEDs), scenarios without interrupt line
+sim_gpio_irq_mask                : Simulation of sbi_GPIO_irq (UVVM) - imr only masks it_o, the isr records the masked edges
+sim_gpio_irq_negedge             : Simulation of sbi_GPIO_irq (UVVM) - falling edges recorded for IRQ_NEGEDGE lines only, it_o latency
+sim_gpio_irq_output              : Simulation of sbi_GPIO_irq (UVVM) - data written before the direction, data reads the output register
+sim_gpio_irq_output_line         : Simulation of sbi_GPIO_irq (UVVM) - no interrupt on an output line, nor when it becomes input with its pin high
+sim_gpio_irq_posedge             : Simulation of sbi_GPIO_irq (UVVM) - rising edges recorded for IRQ_POSEDGE lines only, it_o latency, isr rw1c
+sim_gpio_irq_reset_values        : Simulation of sbi_GPIO_irq (UVVM) - reset values of isr, imr, data_oe (DATA_OE_INIT) and pins
+sim_gpio_led                     : Simulation of sbi_GPIO (UVVM), compared with GPIO_v1 - DATA_OE_INIT 0xFF (every line output after reset), every scenario
+sim_gpio_mixed                   : Simulation of sbi_GPIO (UVVM), compared with GPIO_v1 - inputs and outputs on the same port, data per bit
+sim_gpio_output                  : Simulation of sbi_GPIO (UVVM), compared with GPIO_v1 - every line output, data and data_out writes drive data_o
+sim_gpio_reset_values            : Simulation of sbi_GPIO (UVVM), compared with GPIO_v1 - reset values of the registers and pins (DATA_OE_INIT), data_in through the synchronizer
+sim_gpio_walking_one             : Simulation of sbi_GPIO (UVVM), compared with GPIO_v1 - walking one on the output register then on the pins
+syn_gpio_default                 : Synthesis (Artix-7, sky130) of sbi_GPIO_wrapper, default generics (8 lines, input after reset)
+syn_gpio_irq_default             : Synthesis (Artix-7, sky130) of sbi_GPIO_irq_wrapper, default generics (8 lines, input after reset, interrupt on both edges, PicoSoC switches)
+syn_gpio_irq_nb_io4              : Synthesis (Artix-7, sky130) of sbi_GPIO_irq_wrapper, NB_IO 4 with the edges of tb_GPIO_irq
+syn_gpio_irq_no_irq              : Synthesis (Artix-7, sky130) of sbi_GPIO_irq_wrapper, every line output after reset, no interrupt (PicoSoC LEDs)
+syn_gpio_led                     : Synthesis (Artix-7, sky130) of sbi_GPIO_wrapper, every line output after reset (LEDs)
 

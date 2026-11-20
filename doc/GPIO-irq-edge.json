@@ -1,0 +1,20 @@
+{
+ "signal": [
+  {"name": "clk_i",                     "wave": "hlhlhlhlhlhlhlhl"},
+  {"name": "data_i (pin)",              "wave": "0....1..........", "node": ".....A"},
+  {},
+  ["sync2dff",
+   {"name": "stage 1",                  "wave": "0.....1........."},
+   {"name": "data_in (stage 2)",        "wave": "0.......1......."}
+  ],
+  {"name": "data_in_r",                 "wave": "0.........1....."},
+  {"name": "posedge and IRQ_POSEDGE",   "wave": "0.......4.0.....", "data": ["edge"]},
+  {},
+  {"name": "isr(i)",                    "wave": "0.........5.....", "data": ["1 until written 1"], "node": "..........E"},
+  {"name": "it_o (imr(i) = 1)",         "wave": "0.........5.....", "data": ["OR(isr and imr)"]}
+ ],
+ "edge": ["A~>E 3 rising edges"],
+ "head": {"text": "Rising edge interrupt on line i (input line)"},
+ "foot": {"text": "The ISR records the edge even when imr(i) = 0 (polling)"},
+ "config": {"hscale": 1}
+}

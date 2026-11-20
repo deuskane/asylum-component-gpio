@@ -6,14 +6,12 @@
 -- Author     : Mathieu Rosiere
 -------------------------------------------------------------------------------
 -- Description:
--- Wrapper (lint_ghdl, lint_ghdl_synth_*) : sbi_GPIO and
--- sbi_GPIO_irq with flat and constrained ports (their SBI ports are
--- unconstrained and their DATA_OE_INIT / IRQ_* generics have no default :
--- they cannot be a synthesis top). SBI address / data width :
--- SBI_ADDR_WIDTH / SBI_DATA_WIDTH. NB_IO and DATA_OE_INIT are shared by the
--- two instances, IRQ_POSEDGE / IRQ_NEGEDGE go to sbi_GPIO_irq (NAME is only
--- in sbi_tgt.info, not connected). DATA_OE_INIT and IRQ_* are 8-bit wide
--- (CSR width) as in asylum-soc-picosoc.
+-- Wrapper (lint_ghdl, lint_ghdl_synth_gpio_*, syn_gpio_*) : sbi_GPIO with
+-- flat and constrained ports (its SBI ports are unconstrained and its
+-- DATA_OE_INIT generic has no default : it cannot be a synthesis top). SBI
+-- address / data width : SBI_ADDR_WIDTH / SBI_DATA_WIDTH (NAME is only in
+-- sbi_tgt.info, not connected). DATA_OE_INIT is 8-bit wide (CSR width).
+-- sbi_GPIO_irq has its own wrapper, sbi_GPIO_irq_wrapper.
 -------------------------------------------------------------------------------
 -- Copyright (c) 2026
 -------------------------------------------------------------------------------
@@ -21,6 +19,8 @@
 -- Date        Version  Author   Description
 -- 2026-10-20  1.0      mrosiere Created
 -- 2026-10-24  1.1      mrosiere Was sbi_GPIO_synth_top, library asylum
+-- 2026-11-20  2.0      mrosiere sbi_GPIO only, sbi_GPIO_irq in
+--                               sbi_GPIO_irq_wrapper
 -------------------------------------------------------------------------------
 
 library ieee;
@@ -28,66 +28,51 @@ use     ieee.std_logic_1164.all;
 library asylum;
 use     asylum.sbi_pkg.all;
 use     asylum.GPIO_csr_pkg.all;
-use     asylum.GPIO_irq_csr_pkg.all;
 
 entity sbi_GPIO_wrapper is
   generic (
     NB_IO           : natural := 8;
-    DATA_OE_INIT    : std_logic_vector(GPIO_DATA_WIDTH-1 downto 0)     := (others => '0');
-    IRQ_POSEDGE     : std_logic_vector(GPIO_IRQ_DATA_WIDTH-1 downto 0) := (others => '1');
-    IRQ_NEGEDGE     : std_logic_vector(GPIO_IRQ_DATA_WIDTH-1 downto 0) := (others => '1')
+    DATA_OE_INIT    : std_logic_vector(GPIO_DATA_WIDTH-1 downto 0) := (others => '0')
   );
   port (
     clk_i           : in  std_logic;
     cke_i           : in  std_logic;
     arstn_i         : in  std_logic;
 
-    -- sbi_GPIO
-    gpio_cs_i       : in  std_logic;
-    gpio_re_i       : in  std_logic;
-    gpio_we_i       : in  std_logic;
-    gpio_addr_i     : in  std_logic_vector(SBI_ADDR_WIDTH-1 downto 0);
-    gpio_wdata_i    : in  std_logic_vector(SBI_DATA_WIDTH-1 downto 0);
-    gpio_ready_o    : out std_logic;
-    gpio_rdata_o    : out std_logic_vector(SBI_DATA_WIDTH-1 downto 0);
-    gpio_data_i     : in  std_logic_vector(NB_IO-1 downto 0);
-    gpio_data_o     : out std_logic_vector(NB_IO-1 downto 0);
-    gpio_data_oe_o  : out std_logic_vector(NB_IO-1 downto 0);
-    gpio_it_o       : out std_logic;
+    -- Bus
+    cs_i            : in  std_logic;
+    re_i            : in  std_logic;
+    we_i            : in  std_logic;
+    addr_i          : in  std_logic_vector(SBI_ADDR_WIDTH-1 downto 0);
+    wdata_i         : in  std_logic_vector(SBI_DATA_WIDTH-1 downto 0);
+    ready_o         : out std_logic;
+    rdata_o         : out std_logic_vector(SBI_DATA_WIDTH-1 downto 0);
 
-    -- sbi_GPIO_irq
-    irq_cs_i        : in  std_logic;
-    irq_re_i        : in  std_logic;
-    irq_we_i        : in  std_logic;
-    irq_addr_i      : in  std_logic_vector(SBI_ADDR_WIDTH-1 downto 0);
-    irq_wdata_i     : in  std_logic_vector(SBI_DATA_WIDTH-1 downto 0);
-    irq_ready_o     : out std_logic;
-    irq_rdata_o     : out std_logic_vector(SBI_DATA_WIDTH-1 downto 0);
-    irq_data_i      : in  std_logic_vector(NB_IO-1 downto 0);
-    irq_data_o      : out std_logic_vector(NB_IO-1 downto 0);
-    irq_data_oe_o   : out std_logic_vector(NB_IO-1 downto 0);
-    irq_it_o        : out std_logic
+    -- To/From IO
+    data_i          : in  std_logic_vector(NB_IO-1 downto 0);
+    data_o          : out std_logic_vector(NB_IO-1 downto 0);
+    data_oe_o       : out std_logic_vector(NB_IO-1 downto 0);
+
+    -- Interruption
+    it_o            : out std_logic
   );
 end entity sbi_GPIO_wrapper;
 
 architecture rtl of sbi_GPIO_wrapper is
 
-  signal gpio_sbi_ini  : sbi_ini_t(addr (SBI_ADDR_WIDTH-1 downto 0),
-                                   wdata(SBI_DATA_WIDTH-1 downto 0));
-  signal gpio_sbi_tgt  : sbi_tgt_t(rdata(SBI_DATA_WIDTH-1 downto 0));
-  signal irq_sbi_ini   : sbi_ini_t(addr (SBI_ADDR_WIDTH-1 downto 0),
-                                   wdata(SBI_DATA_WIDTH-1 downto 0));
-  signal irq_sbi_tgt   : sbi_tgt_t(rdata(SBI_DATA_WIDTH-1 downto 0));
+  signal sbi_ini  : sbi_ini_t(addr (SBI_ADDR_WIDTH-1 downto 0),
+                              wdata(SBI_DATA_WIDTH-1 downto 0));
+  signal sbi_tgt  : sbi_tgt_t(rdata(SBI_DATA_WIDTH-1 downto 0));
 
 begin
 
-  gpio_sbi_ini.cs    <= gpio_cs_i;
-  gpio_sbi_ini.re    <= gpio_re_i;
-  gpio_sbi_ini.we    <= gpio_we_i;
-  gpio_sbi_ini.addr  <= gpio_addr_i;
-  gpio_sbi_ini.wdata <= gpio_wdata_i;
-  gpio_ready_o       <= gpio_sbi_tgt.ready;
-  gpio_rdata_o       <= gpio_sbi_tgt.rdata;
+  sbi_ini.cs    <= cs_i;
+  sbi_ini.re    <= re_i;
+  sbi_ini.we    <= we_i;
+  sbi_ini.addr  <= addr_i;
+  sbi_ini.wdata <= wdata_i;
+  ready_o       <= sbi_tgt.ready;
+  rdata_o       <= sbi_tgt.rdata;
 
   ins_sbi_GPIO : entity asylum.sbi_GPIO
     generic map (
@@ -98,39 +83,12 @@ begin
       clk_i           => clk_i,
       cke_i           => cke_i,
       arstn_i         => arstn_i,
-      sbi_ini_i       => gpio_sbi_ini,
-      sbi_tgt_o       => gpio_sbi_tgt,
-      data_i          => gpio_data_i,
-      data_o          => gpio_data_o,
-      data_oe_o       => gpio_data_oe_o,
-      it_o            => gpio_it_o
-    );
-
-  irq_sbi_ini.cs     <= irq_cs_i;
-  irq_sbi_ini.re     <= irq_re_i;
-  irq_sbi_ini.we     <= irq_we_i;
-  irq_sbi_ini.addr   <= irq_addr_i;
-  irq_sbi_ini.wdata  <= irq_wdata_i;
-  irq_ready_o        <= irq_sbi_tgt.ready;
-  irq_rdata_o        <= irq_sbi_tgt.rdata;
-
-  ins_sbi_GPIO_irq : entity asylum.sbi_GPIO_irq
-    generic map (
-      NB_IO           => NB_IO,
-      DATA_OE_INIT    => DATA_OE_INIT,
-      IRQ_POSEDGE     => IRQ_POSEDGE,
-      IRQ_NEGEDGE     => IRQ_NEGEDGE
-    )
-    port map (
-      clk_i           => clk_i,
-      cke_i           => cke_i,
-      arstn_i         => arstn_i,
-      sbi_ini_i       => irq_sbi_ini,
-      sbi_tgt_o       => irq_sbi_tgt,
-      data_i          => irq_data_i,
-      data_o          => irq_data_o,
-      data_oe_o       => irq_data_oe_o,
-      it_o            => irq_it_o
+      sbi_ini_i       => sbi_ini,
+      sbi_tgt_o       => sbi_tgt,
+      data_i          => data_i,
+      data_o          => data_o,
+      data_oe_o       => data_oe_o,
+      it_o            => it_o
     );
 
 end architecture rtl;

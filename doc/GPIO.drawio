@@ -1,0 +1,286 @@
+<mxfile host="Electron">
+  <diagram name="Overview" id="gpio-ov">
+    <mxGraphModel grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="gpio-ov-1" value="generics: NB_IO, DATA_OE_INIT" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;fontSize=10;fontColor=#666666;fontStyle=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="160" y="130" width="740" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-2" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="160" y="170" width="760" height="260" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-3" value="sbi_GPIO" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="160" y="170" width="90" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-4" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="200" y="210" width="200" height="190" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-5" value="GPIO_registers" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="200" y="210" width="120" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-6" value="data_oe, data_out" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=left;" vertex="1" parent="1">
+          <mxGeometry x="228" y="235" width="170" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-7" value="data_in: written every cycle&lt;br&gt;data (read): from GPIO_core&lt;br&gt;data (write): alias of data_out" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;fontSize=11;align=left;" vertex="1" parent="1">
+          <mxGeometry x="210" y="300" width="185" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-8" value="M" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="235" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-9" value="S" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="235" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=classic;startFill=1;strokeWidth=2;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="60" y="245" as="sourcePoint"/>
+            <mxPoint x="200" y="245" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-11" value="SBI" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=center;" vertex="1" parent="1">
+          <mxGeometry x="70" y="217" width="70" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-12" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="560" y="210" width="240" height="190" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-13" value="GPIO_core" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="560" y="210" width="90" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-14" value="data read mux&lt;br&gt;(data_out and data_oe) or&lt;br&gt;(data_in and not data_oe)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="580" y="245" width="200" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-15" value="data_in_meta_r&lt;br&gt;synchronizer stage 1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="580" y="330" width="200" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="400" y="242" as="sourcePoint"/>
+            <mxPoint x="560" y="242" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-17" value="data_out, data_oe" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=center;" vertex="1" parent="1">
+          <mxGeometry x="420" y="222" width="130" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="580" y="270" as="sourcePoint"/>
+            <mxPoint x="400" y="270" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-19" value="data (read)" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=center;" vertex="1" parent="1">
+          <mxGeometry x="420" y="250" width="130" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="580" y="350" as="sourcePoint"/>
+            <mxPoint x="400" y="350" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-21" value="data_in (stage 2)" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=center;" vertex="1" parent="1">
+          <mxGeometry x="420" y="330" width="130" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-22" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="940" y="220" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="800" y="230" as="sourcePoint"/>
+            <mxPoint x="940" y="230" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-24" value="data_o [NB_IO-1:0]" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=left;" vertex="1" parent="1">
+          <mxGeometry x="970" y="215" width="170" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-25" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="940" y="260" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="800" y="270" as="sourcePoint"/>
+            <mxPoint x="940" y="270" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-27" value="data_oe_o [NB_IO-1:0]" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=left;" vertex="1" parent="1">
+          <mxGeometry x="970" y="255" width="170" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-28" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="940" y="340" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-29" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="940" y="350" as="sourcePoint"/>
+            <mxPoint x="780" y="350" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-30" value="data_i [NB_IO-1:0]" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=left;" vertex="1" parent="1">
+          <mxGeometry x="970" y="335" width="170" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-31" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="940" y="400" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-32" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="920" y="410" as="sourcePoint"/>
+            <mxPoint x="940" y="410" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-33" value="it_o = '0'" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=left;" vertex="1" parent="1">
+          <mxGeometry x="970" y="395" width="170" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-34" value="generics: NB_IO, DATA_OE_INIT, IRQ_POSEDGE, IRQ_NEGEDGE" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;fontSize=10;fontColor=#666666;fontStyle=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="160" y="470" width="740" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-35" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="160" y="510" width="760" height="320" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-36" value="sbi_GPIO_irq" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="160" y="510" width="110" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-37" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="200" y="550" width="200" height="250" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-38" value="GPIO_irq_registers" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="200" y="550" width="140" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-39" value="isr (rw1c), imr, data_oe" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=left;" vertex="1" parent="1">
+          <mxGeometry x="228" y="575" width="170" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-40" value="data (read): from GPIO_irq_core&lt;br&gt;data (write): output register" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;fontSize=11;align=left;" vertex="1" parent="1">
+          <mxGeometry x="210" y="740" width="185" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-41" value="M" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="575" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-42" value="S" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="575" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-43" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=classic;startFill=1;strokeWidth=2;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="60" y="585" as="sourcePoint"/>
+            <mxPoint x="200" y="585" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-44" value="SBI" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=center;" vertex="1" parent="1">
+          <mxGeometry x="70" y="557" width="70" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-45" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="520" y="550" width="280" height="250" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-46" value="GPIO_irq_core" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="520" y="550" width="110" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-47" value="data_out_r" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="670" y="585" width="110" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-48" value="edge detection&lt;br&gt;data_in_r" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="670" y="665" width="110" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-49" value="sync2dff&lt;br&gt;per line" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="670" y="740" width="110" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-50" value="data read mux" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="540" y="625" width="110" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-51" value="GIC_core&lt;br&gt;isr = its or isr&lt;br&gt;it = OR(isr and imr)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="540" y="690" width="110" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-52" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="725" y="740" as="sourcePoint"/>
+            <mxPoint x="725" y="705" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-53" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="670" y="697" as="sourcePoint"/>
+            <mxPoint x="650" y="697" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-54" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="400" y="600" as="sourcePoint"/>
+            <mxPoint x="670" y="600" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-55" value="data (write)" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=center;" vertex="1" parent="1">
+          <mxGeometry x="420" y="580" width="110" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-56" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="540" y="645" as="sourcePoint"/>
+            <mxPoint x="400" y="645" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-57" value="data (read)" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=center;" vertex="1" parent="1">
+          <mxGeometry x="420" y="625" width="110" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-58" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="400" y="705" as="sourcePoint"/>
+            <mxPoint x="540" y="705" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-59" value="isr, imr" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=center;" vertex="1" parent="1">
+          <mxGeometry x="420" y="685" width="110" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-60" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="540" y="735" as="sourcePoint"/>
+            <mxPoint x="400" y="735" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-61" value="isr (next)" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=center;" vertex="1" parent="1">
+          <mxGeometry x="420" y="715" width="110" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-62" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="940" y="590" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-63" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="780" y="600" as="sourcePoint"/>
+            <mxPoint x="940" y="600" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-64" value="data_o [NB_IO-1:0]" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=left;" vertex="1" parent="1">
+          <mxGeometry x="970" y="585" width="170" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-65" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="940" y="630" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-66" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="800" y="640" as="sourcePoint"/>
+            <mxPoint x="940" y="640" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-67" value="data_oe_o [NB_IO-1:0]" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=left;" vertex="1" parent="1">
+          <mxGeometry x="970" y="625" width="170" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-68" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="940" y="712" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-69" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="650" y="722" as="sourcePoint"/>
+            <mxPoint x="940" y="722" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-70" value="it_o" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=left;" vertex="1" parent="1">
+          <mxGeometry x="970" y="707" width="170" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-71" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="940" y="750" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gpio-ov-72" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="940" y="760" as="sourcePoint"/>
+            <mxPoint x="780" y="760" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio-ov-73" value="data_i [NB_IO-1:0]" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;verticalAlign=middle;rounded=0;align=left;" vertex="1" parent="1">
+          <mxGeometry x="970" y="745" width="170" height="30" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
