@@ -7,19 +7,99 @@ on:
     branches: [ main, develop ]
 jobs:
 #<GENERATE_BEGIN>
-  sim_testcase:
+  sim_gpio:
     uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
     with:
-      name: sim_testcase
+      name: sim_gpio
 
-  sim_testcase_irq:
+  sim_gpio_async_reset:
     uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
     with:
-      name: sim_testcase_irq
+      name: sim_gpio_async_reset
 
-  sim_testcase_vs_v1:
+  sim_gpio_input:
     uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
     with:
-      name: sim_testcase_vs_v1
+      name: sim_gpio_input
+
+  sim_gpio_irq:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_gpio_irq
+
+  sim_gpio_irq_async_reset:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_gpio_irq_async_reset
+
+  sim_gpio_irq_default:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_gpio_irq_default
+
+  sim_gpio_irq_input:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_gpio_irq_input
+
+  sim_gpio_irq_led:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_gpio_irq_led
+
+  sim_gpio_irq_mask:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_gpio_irq_mask
+
+  sim_gpio_irq_negedge:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_gpio_irq_negedge
+
+  sim_gpio_irq_output:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_gpio_irq_output
+
+  sim_gpio_irq_output_line:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_gpio_irq_output_line
+
+  sim_gpio_irq_posedge:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_gpio_irq_posedge
+
+  sim_gpio_irq_reset_values:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_gpio_irq_reset_values
+
+  sim_gpio_led:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_gpio_led
+
+  sim_gpio_mixed:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_gpio_mixed
+
+  sim_gpio_output:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_gpio_output
+
+  sim_gpio_reset_values:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_gpio_reset_values
+
+  sim_gpio_walking_one:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_gpio_walking_one
 
 #<GENERATE_END>
