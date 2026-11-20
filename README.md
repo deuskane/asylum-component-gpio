@@ -180,15 +180,17 @@ The vector generics are 8 bits wide whatever `NB_IO`: they set 8-bit register fi
 
 ## Resources
 
-Figures of the `syn_*` targets (`make nonreg_syn`, see [Targets](#targets)): [syn/sbi_GPIO_wrapper.vhd](syn/sbi_GPIO_wrapper.vhd) with the generics of each configuration, synthesized by Yosys and its GHDL plugin; the reports are in the build directory of each target. The wrapper holds **one `sbi_GPIO` and one `sbi_GPIO_irq`** with the same `NB_IO` and `DATA_OE_INIT`: each figure is the sum of the two variants.
+Figures of the `syn_*` targets (`make nonreg_syn`, see [Targets](#targets)): one wrapper per variant, [syn/sbi_GPIO_wrapper.vhd](syn/sbi_GPIO_wrapper.vhd) (`syn_gpio_*`) and [syn/sbi_GPIO_irq_wrapper.vhd](syn/sbi_GPIO_irq_wrapper.vhd) (`syn_gpio_irq_*`), with the generics of each configuration, synthesized by Yosys and its GHDL plugin; the reports are in the build directory of each target.
 
 | Configuration | LUT¹ | LUTRAM¹ | FF¹ | CARRY4¹ | MUXF7/F8¹ | BRAM¹ | DSP¹ | Area² (µm²) | kGE³ |
 |---|---|---|---|---|---|---|---|---|---|
-| `syn_default` (8 lines, interrupt on both edges of every line) | 103 | 0 | 88 | 0 | 0 | 0 | 0 | 3210.58 | 0.855 |
-| `syn_led` (8 lines output after reset, no interrupt) | 102 | 0 | 80 | 0 | 0 | 0 | 0 | 2960.34 | 0.789 |
-| `syn_nb_io4` (4 lines, edges 0x0A / 0x0C) | 91 | 0 | 63 | 0 | 0 | 0 | 0 | 2448.60 | 0.652 |
+| `syn_gpio_default` (`sbi_GPIO`, 8 lines input after reset) | 34 | 0 | 32 | 0 | 0 | 0 | 0 | 1174.88 | 0.313 |
+| `syn_gpio_led` (`sbi_GPIO`, 8 lines output after reset) | 34 | 0 | 32 | 0 | 0 | 0 | 0 | 1184.89 | 0.316 |
+| `syn_gpio_irq_default` (`sbi_GPIO_irq`, 8 lines, interrupt on both edges) | 68 | 0 | 56 | 0 | 0 | 0 | 0 | 2035.70 | 0.542 |
+| `syn_gpio_irq_nb_io4` (`sbi_GPIO_irq`, 4 lines, edges 0x0A / 0x0C) | 60 | 0 | 39 | 0 | 0 | 0 | 0 | 1493.93 | 0.398 |
+| `syn_gpio_irq_no_irq` (`sbi_GPIO_irq`, 8 lines output after reset, no interrupt) | 67 | 0 | 48 | 0 | 0 | 0 | 0 | 1858.03 | 0.495 |
 
-¹ Xilinx Artix-7 (LUT6), Yosys 0.33 `synth_xilinx -flatten -noiopad -noclkbuf`, before place and route: every cell of the netlist is counted, Vivado may differ. An `INV` counts as a `LUT1`: `synth_xilinx` puts one on the reset pin of each flip-flop with the active-low reset (56 of the 103 LUTs of `syn_default`). The IP has no memory: no LUTRAM, no BRAM. `syn_default` has 88 flip-flops: 32 in `sbi_GPIO` (`data_oe`, `data_out`, `data_in`, first synchronizer stage) and 56 in `sbi_GPIO_irq` (`isr`, `imr`, `data_oe`, output register, 2 synchronizer stages, `data_in_r`).
+¹ Xilinx Artix-7 (LUT6), Yosys 0.33 `synth_xilinx -flatten -noiopad -noclkbuf`, before place and route: every cell of the netlist is counted, Vivado may differ. An `INV` counts as a `LUT1`: `synth_xilinx` puts one on the reset pin of each flip-flop with the active-low reset (24 of the 34 LUTs of `syn_gpio_default`, 32 of the 68 of `syn_gpio_irq_default`). The IP has no memory: no LUTRAM, no BRAM. Flip-flops: `sbi_GPIO` 32 (`data_oe`, `data_out`, `data_in`, first synchronizer stage); `sbi_GPIO_irq` 56 (`isr`, `imr`, `data_oe`, output register, 2 synchronizer stages, `data_in_r`), fewer with less than 8 lines (synchronizer, output register) and for the lines without edge interrupt (their `data_in_r` bit is removed).
 
 ² SkyWater sky130 `sky130_fd_sc_hd`, typical corner (tt, 25 °C, 1.80 V), Yosys 0.33 `synth` + `dfflibmap` + `abc -liberty`: standard-cell area only, no timing constraint, no buffering, clock tree or placement.
 
@@ -371,9 +373,10 @@ The scenarios are chosen at run time with the generic `TESTS_LIST`: names separa
 | `sim_gpio_irq_<name>` | `tb_GPIO_irq` | One target per scenario: `sim_gpio_irq_reset_values`, `_output`, `_input`, `_posedge`, `_negedge`, `_mask`, `_output_line`, `_async_reset` (56 checks in all) |
 | `sim_gpio_irq_default` | `tb_GPIO_irq` | 8 lines, interrupt on both edges of every line, every scenario (56 checks) |
 | `sim_gpio_irq_led` | `tb_GPIO_irq` | 8 lines output after reset, no interrupt: `reset_values`, `output`, `input`, `posedge`, `negedge`, `async_reset` (41 checks) |
-| `lint_ghdl` | `asylum.sbi_GPIO_wrapper` | GHDL `-Wall` analysis and elaboration of [syn/sbi_GPIO_wrapper.vhd](syn/sbi_GPIO_wrapper.vhd) (`sbi_GPIO` and `sbi_GPIO_irq` with flat SBI ports) |
-| `lint_ghdl_synth_<config>` | `asylum.sbi_GPIO_wrapper` | `ghdl --synth` check (no latch, synthesizable) for 3 generic configurations: `default`, `led`, `nb_io4` |
-| `syn_<config>` | `asylum.sbi_GPIO_wrapper` | Synthesis with Yosys, Artix-7 and sky130 (see [Resources](#resources)), same 3 configurations: `syn_default`, `syn_led`, `syn_nb_io4` |
+| `lint_ghdl` | `asylum.sbi_GPIO_wrapper` | GHDL `-Wall` analysis of [syn/sbi_GPIO_wrapper.vhd](syn/sbi_GPIO_wrapper.vhd) and [syn/sbi_GPIO_irq_wrapper.vhd](syn/sbi_GPIO_irq_wrapper.vhd) (each variant with flat SBI ports), elaboration of `sbi_GPIO_wrapper` |
+| `lint_ghdl_synth_gpio_<config>` | `asylum.sbi_GPIO_wrapper` | `ghdl --synth` check (no latch, synthesizable) of `sbi_GPIO`: `default` (every line input after reset), `led` (every line output after reset) |
+| `lint_ghdl_synth_gpio_irq_<config>` | `asylum.sbi_GPIO_irq_wrapper` | `ghdl --synth` check of `sbi_GPIO_irq`: `default` (8 lines, both edges), `nb_io4` (4 lines, edges 0x0A / 0x0C), `no_irq` (8 lines output after reset, no interrupt) |
+| `syn_gpio_<config>`, `syn_gpio_irq_<config>` | the wrapper of the variant | Synthesis with Yosys, Artix-7 and sky130 (see [Resources](#resources)), same configurations as `lint_ghdl_synth_*`: `syn_gpio_default`, `syn_gpio_led`, `syn_gpio_irq_default`, `syn_gpio_irq_nb_io4`, `syn_gpio_irq_no_irq` |
 
 The reference configuration of a testbench has a build-only base target and one target per scenario: one CI job per scenario, a failure is isolated. Every other configuration has one target that runs its whole list: the `TEST <i>/<N>` header names a failing scenario. FuseSoC replaces the `parameters` list of an inherited target, so each target repeats the generics of its configuration.
 
