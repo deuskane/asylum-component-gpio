@@ -184,13 +184,13 @@ Figures of the `syn_*` targets (`make nonreg_syn`, see [Targets](#targets)): one
 
 | Configuration | LUT¹ | LUTRAM¹ | FF¹ | CARRY4¹ | MUXF7/F8¹ | BRAM¹ | DSP¹ | Area² (µm²) | kGE³ |
 |---|---|---|---|---|---|---|---|---|---|
-| `syn_gpio_default` (`sbi_GPIO`, 8 lines input after reset) | 34 | 0 | 32 | 0 | 0 | 0 | 0 | 1174.88 | 0.313 |
-| `syn_gpio_led` (`sbi_GPIO`, 8 lines output after reset) | 34 | 0 | 32 | 0 | 0 | 0 | 0 | 1184.89 | 0.316 |
-| `syn_gpio_irq_default` (`sbi_GPIO_irq`, 8 lines, interrupt on both edges) | 68 | 0 | 56 | 0 | 0 | 0 | 0 | 2035.70 | 0.542 |
-| `syn_gpio_irq_nb_io4` (`sbi_GPIO_irq`, 4 lines, edges 0x0A / 0x0C) | 60 | 0 | 39 | 0 | 0 | 0 | 0 | 1493.93 | 0.398 |
-| `syn_gpio_irq_no_irq` (`sbi_GPIO_irq`, 8 lines output after reset, no interrupt) | 67 | 0 | 48 | 0 | 0 | 0 | 0 | 1858.03 | 0.495 |
+| `syn_gpio_default` (`sbi_GPIO`, 8 lines input after reset) | 11 | 0 | 32 | 0 | 0 | 0 | 0 | 1174.88 | 0.313 |
+| `syn_gpio_led` (`sbi_GPIO`, 8 lines output after reset) | 11 | 0 | 32 | 0 | 0 | 0 | 0 | 1184.89 | 0.316 |
+| `syn_gpio_irq_default` (`sbi_GPIO_irq`, 8 lines, interrupt on both edges) | 37 | 0 | 56 | 0 | 0 | 0 | 0 | 2035.70 | 0.542 |
+| `syn_gpio_irq_nb_io4` (`sbi_GPIO_irq`, 4 lines, edges 0x0A / 0x0C) | 33 | 0 | 39 | 0 | 0 | 0 | 0 | 1493.93 | 0.398 |
+| `syn_gpio_irq_no_irq` (`sbi_GPIO_irq`, 8 lines output after reset, no interrupt) | 36 | 0 | 48 | 0 | 0 | 0 | 0 | 1858.03 | 0.495 |
 
-¹ Xilinx Artix-7 (LUT6), Yosys 0.33 `synth_xilinx -flatten -noiopad -noclkbuf`, before place and route: every cell of the netlist is counted, Vivado may differ. An `INV` counts as a `LUT1`: `synth_xilinx` puts one on the reset pin of each flip-flop with the active-low reset (24 of the 34 LUTs of `syn_gpio_default`, 32 of the 68 of `syn_gpio_irq_default`). The IP has no memory: no LUTRAM, no BRAM. Flip-flops: `sbi_GPIO` 32 (`data_oe`, `data_out`, `data_in`, first synchronizer stage); `sbi_GPIO_irq` 56 (`isr`, `imr`, `data_oe`, output register, 2 synchronizer stages, `data_in_r`), fewer with less than 8 lines (synchronizer, output register) and for the lines without edge interrupt (their `data_in_r` bit is removed).
+¹ Xilinx Artix-7 (LUT6), Yosys 0.33 `synth_xilinx -flatten -noiopad -noclkbuf`, before place and route: every cell of the netlist is counted, Vivado may differ. Identical cells are merged as a vendor tool does (`opt_merge -share_all`): the inverters of an active-low reset net become one; every remaining cell is counted, an `INV` as a `LUT1` (1 of the 11 LUTs of `syn_gpio_default`, 1 of the 37 of `syn_gpio_irq_default`). The IP has no memory: no LUTRAM, no BRAM. Flip-flops: `sbi_GPIO` 32 (`data_oe`, `data_out`, `data_in`, first synchronizer stage); `sbi_GPIO_irq` 56 (`isr`, `imr`, `data_oe`, output register, 2 synchronizer stages, `data_in_r`), fewer with less than 8 lines (synchronizer, output register) and for the lines without edge interrupt (their `data_in_r` bit is removed).
 
 ² SkyWater sky130 `sky130_fd_sc_hd`, typical corner (tt, 25 °C, 1.80 V), Yosys 0.33 `synth` + `dfflibmap` + `abc -liberty`: standard-cell area only, no timing constraint, no buffering, clock tree or placement.
 
